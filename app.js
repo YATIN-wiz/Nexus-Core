@@ -395,6 +395,16 @@ class ThermalDatabase {
     });
   }
 
+  async clearAll() {
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction([STORE_NAME], "readwrite");
+      const store = transaction.objectStore(STORE_NAME);
+      store.clear();
+      transaction.oncomplete = () => resolve(true);
+      transaction.onerror = () => reject(transaction.error);
+    });
+  }
+
   async reset() {
     return new Promise((resolve, reject) => {
       const transaction = this.db.transaction([STORE_NAME], "readwrite");
@@ -412,11 +422,12 @@ class ThermalDatabase {
 // ============================================================================
 // 2. CLIENT-SIDE MULTI-MODAL RULE CLASSIFIER (Mirrors firms_osm_seed_generator.py)
 // ============================================================================
-function classifyThermalAnomaly({ frp, recurrenceCount, nearestIndustrialDistM, landCoverClass }) {
+function classifyThermalAnomaly({ frp, recurrenceCount, nearestIndustrialDistM, landCoverClass, osmTag }) {
   const reasoning = [];
   const dist = nearestIndustrialDistM;
   const recurrence = recurrenceCount;
   const land_cover = landCoverClass;
+  const isFarFromResidential = !osmTag || !/residential|housing|settlement/i.test(osmTag);
 
   // Rule 1: Gas Flare / Flare Stack
   // Recurrence > 20, close to industrial polygon (<500m), moderate FRP (<50MW)
@@ -433,7 +444,7 @@ function classifyThermalAnomaly({ frp, recurrenceCount, nearestIndustrialDistM, 
 
   // Rule 2: Accidental Industrial Fire
   // Built-up land cover, close to industrial (<1000m), low-moderate recurrence (new uncharacteristic flare)
-  if (dist !== null && dist < 1000 && land_cover === "built-up") {
+  if (dist !== null && dist < 1000 && land_cover === "built-up" && recurrence <= 20) {
     reasoning.push("Land cover: built-up");
     reasoning.push(`Distance to nearest industrial polygon: ${Math.round(dist)}m`);
     reasoning.push(`Recurrence: ${recurrence} (low-moderate)`);
@@ -445,7 +456,7 @@ function classifyThermalAnomaly({ frp, recurrenceCount, nearestIndustrialDistM, 
   }
 
   // Rule 3: Mining / Subsurface Coal Fire / Quarry Blasting
-  if (land_cover === "bare/mining") {
+  if (land_cover === "bare/mining" && isFarFromResidential) {
     reasoning.push("Land cover: bare/mining");
     reasoning.push(dist !== null ? `Distance to nearest industrial tag: ${Math.round(dist)}m` : "No nearby industrial tag");
     return {
@@ -604,6 +615,7 @@ class ApplicationStore {
     this.searchQuery = "";
     this.sortBy = "detectedAt";
     this.sortDesc = true;
+    this.role = "analyst";
     this.listeners = new Set();
   }
 
@@ -675,14 +687,6 @@ class ApplicationStore {
     const id = recordData.id || crypto.randomUUID();
     const now = new Date().toISOString();
     
-    // Run rule classifier
-    const classificationResult = classifyThermalAnomaly({
-      frp: recordData.frp,
-      recurrenceCount: recordData.recurrenceCount,
-      nearestIndustrialDistM: recordData.nearestIndustrialDistM,
-      landCoverClass: recordData.landCoverClass
-    });
-
     const newRecord = {
       id,
       locationLabel: recordData.locationLabel || "Manual Hotspot",
@@ -694,10 +698,10 @@ class ApplicationStore {
       recurrenceCount: parseInt(recordData.recurrenceCount, 10) || 0,
       nearestIndustrialDistM: recordData.nearestIndustrialDistM !== null && recordData.nearestIndustrialDistM !== "" ? parseFloat(recordData.nearestIndustrialDistM) : null,
       osmTag: recordData.osmTag || null,
-      classification: classificationResult.classification,
-      confidence: classificationResult.confidence,
-      reasoning: classificationResult.reasoning,
-      status: "classified",
+      classification: "unclassified",
+      confidence: 0,
+      reasoning: ["Awaiting real-time classification pipeline"],
+      status: "pending",
       source: "manual_entry",
       createdAt: now,
       updatedAt: now
@@ -707,6 +711,31 @@ class ApplicationStore {
     await this.reloadRecords();
     this.setActiveRecord(id);
     return newRecord;
+  }
+
+  async classifyRecord(id) {
+    const existing = await this.db.get(id);
+    if (!existing) return null;
+
+    const classificationResult = classifyThermalAnomaly({
+      frp: existing.frp,
+      recurrenceCount: existing.recurrenceCount,
+      nearestIndustrialDistM: existing.nearestIndustrialDistM,
+      landCoverClass: existing.landCoverClass,
+      osmTag: existing.osmTag
+    });
+
+    const updated = {
+      ...existing,
+      ...classificationResult,
+      status: "classified",
+      updatedAt: new Date().toISOString()
+    };
+
+    await this.db.put(updated);
+    await this.reloadRecords();
+    if (this.activeRecordId === id) this.notify("active_record_changed", updated);
+    return updated;
   }
 
   async updateRecord(id, updates) {
@@ -727,11 +756,85 @@ class ApplicationStore {
     return updated;
   }
 
+  async updateRecordAndReclassify(id, fieldUpdates, reclassify = true) {
+    const existing = await this.db.get(id);
+    if (!existing) return null;
+
+    let classificationResult = null;
+    if (reclassify) {
+      classificationResult = classifyThermalAnomaly({
+        frp: fieldUpdates.frp !== undefined ? fieldUpdates.frp : existing.frp,
+        recurrenceCount: fieldUpdates.recurrenceCount !== undefined ? fieldUpdates.recurrenceCount : existing.recurrenceCount,
+        nearestIndustrialDistM: fieldUpdates.nearestIndustrialDistM !== undefined ? fieldUpdates.nearestIndustrialDistM : existing.nearestIndustrialDistM,
+        landCoverClass: fieldUpdates.landCoverClass !== undefined ? fieldUpdates.landCoverClass : existing.landCoverClass,
+        osmTag: fieldUpdates.osmTag !== undefined ? fieldUpdates.osmTag : existing.osmTag
+      });
+    }
+
+    const updated = {
+      ...existing,
+      ...fieldUpdates,
+      ...(classificationResult ? {
+        classification: classificationResult.classification,
+        confidence: classificationResult.confidence,
+        reasoning: classificationResult.reasoning
+      } : {}),
+      updatedAt: new Date().toISOString()
+    };
+
+    await this.db.put(updated);
+    await this.reloadRecords();
+    if (this.activeRecordId === id) {
+      this.notify("active_record_changed", updated);
+    }
+    return updated;
+  }
+
+  async deleteRecord(id) {
+    await this.db.delete(id);
+    if (this.activeRecordId === id) {
+      this.activeRecordId = null;
+      this.notify("active_record_changed", null);
+    }
+    await this.reloadRecords();
+    this.notify("record_deleted", id);
+    return true;
+  }
+
+  async clearAllData() {
+    await this.db.clearAll();
+    this.activeRecordId = null;
+    await this.reloadRecords();
+    this.notify("all_data_cleared", null);
+    this.notify("active_record_changed", null);
+    return true;
+  }
+
   async resetToSeed() {
     await this.db.reset();
     await this.reloadRecords();
     this.activeRecordId = null;
     this.notify("reset_to_seed", null);
+    this.notify("active_record_changed", null);
+  }
+
+  async importJSONData(jsonString) {
+    try {
+      const parsed = JSON.parse(jsonString);
+      const recordsToImport = Array.isArray(parsed) ? parsed : (parsed.records || []);
+      if (!recordsToImport.length) throw new Error("No valid records found in JSON structure");
+
+      for (const rec of recordsToImport) {
+        if (rec.id && typeof rec.latitude === "number" && typeof rec.longitude === "number") {
+          await this.db.put(rec);
+        }
+      }
+      await this.reloadRecords();
+      return recordsToImport.length;
+    } catch (err) {
+      console.error("[DB Import Error]", err);
+      throw err;
+    }
   }
 
   exportDataAsJSON() {

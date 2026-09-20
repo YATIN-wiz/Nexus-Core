@@ -62,6 +62,13 @@
 
       <!-- Header Action Controls -->
       <div class="header-actions">
+        <label class="role-switcher" for="role-mode">
+          <span>View</span>
+          <select id="role-mode" class="form-select" aria-label="Dashboard role">
+            <option value="analyst">Analyst View</option>
+            <option value="public">Public / Read-Only</option>
+          </select>
+        </label>
         <button class="btn-command primary" id="btn-add-hotspot">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
           Ingest Hotspot
@@ -70,9 +77,9 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
           Export JSON
         </button>
-        <button class="btn-command danger" id="btn-reset-seed" title="Reset to original 12 NASA FIRMS + OSM seed records">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
-          Reset Seed
+        <button class="btn-command" id="btn-open-settings" title="System Settings & Storage Management">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          Settings
         </button>
       </div>
     </header>
@@ -82,7 +89,7 @@
          ==================================================================== -->
     <div class="workspace-body">
       
-      <!-- LEFT TELEMETRY SIDEBAR -->
+      <!-- LEFT TELEMETRY SIDEBAR (Read Live from IndexedDB) -->
       <aside class="telemetry-sidebar" id="telemetry-sidebar">
         <!-- Section: System Overview KPIs -->
         <div class="sidebar-section">
@@ -177,9 +184,19 @@
               <span class="pill-dot"></span> Wildfire
             </button>
           </div>
+          <label class="sort-control" for="sort-records">
+            <span>Sort log</span>
+            <select id="sort-records" class="form-select">
+              <option value="detectedAt:desc">Newest detected</option>
+              <option value="detectedAt:asc">Oldest detected</option>
+              <option value="frp:desc">Highest FRP</option>
+              <option value="frp:asc">Lowest FRP</option>
+              <option value="locationLabel:asc">Location A-Z</option>
+            </select>
+          </label>
         </div>
 
-        <!-- Section: Dynamic Visual Analytics -->
+        <!-- Section: Dynamic Visual Analytics (Charts read live from IndexedDB) -->
         <div class="sidebar-section">
           <div class="section-title-wrap">
             <span class="section-title">
@@ -194,14 +211,14 @@
 
           <div class="chart-card" style="margin-top: 12px;">
             <div class="chart-header">
-              <span class="chart-title">Fire Radiative Power (FRP MW) Curve</span>
+              <span class="chart-title">Detections Over Time</span>
             </div>
-            <canvas id="chart-frp" class="chart-canvas" style="height: 70px;"></canvas>
+            <canvas id="chart-timeline" class="chart-canvas" style="height: 70px;"></canvas>
           </div>
         </div>
       </aside>
 
-      <!-- CENTER GIS MAP VIEWPORT -->
+      <!-- CENTER GIS MAP VIEWPORT (Reads live from IndexedDB) -->
       <main class="map-viewport" id="map-viewport">
         <!-- Floating Region Switcher Bar -->
         <div class="map-floating-bar">
@@ -228,7 +245,7 @@
         <!-- Leaflet Map Target Element -->
         <div id="gis-map"></div>
 
-        <!-- BOTTOM COLLAPSIBLE TELEMETRY GRID -->
+        <!-- BOTTOM COLLAPSIBLE TELEMETRY GRID (Full CRUD Table) -->
         <div class="bottom-drawer" id="bottom-drawer">
           <div class="drawer-toggle-bar" id="drawer-toggle">
             <div class="drawer-title">
@@ -246,6 +263,7 @@
               <thead>
                 <tr>
                   <th>Facility / Area</th>
+                  <th>Coordinates</th>
                   <th>Classification</th>
                   <th>FRP (Power)</th>
                   <th>Recurrence</th>
@@ -253,6 +271,9 @@
                   <th>Land Cover</th>
                   <th>Confidence</th>
                   <th>Detected At</th>
+                  <th>Status</th>
+                  <th>Source</th>
+                  <th style="min-width: 90px;">Actions</th>
                 </tr>
               </thead>
               <tbody id="telemetry-table-body">
@@ -348,15 +369,23 @@
               </ul>
             </div>
 
-            <!-- Incident Command Action Buttons -->
+            <!-- Incident Command Action Buttons (Full CRUD + Multispectral) -->
             <div class="panel-action-buttons">
               <button class="btn-command primary" id="btn-trigger-swir">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                 Sentinel-2 SWIR Multispectral Cross-Check
               </button>
-              <button class="btn-command" id="btn-trigger-override">
+              <button class="btn-command" id="btn-trigger-edit">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                Commander Review / Override
+                Edit Anomaly (Live Re-Classification)
+              </button>
+              <button class="btn-command" id="btn-trigger-override">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7.5" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+                Commander Audit & Review Status
+              </button>
+              <button class="btn-command danger" id="btn-trigger-delete">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                Delete Record from IndexedDB
               </button>
             </div>
           </div>
@@ -365,7 +394,7 @@
     </div>
 
     <!-- ====================================================================
-         MODAL 1: MANUAL HOTSPOT INGESTION FORM
+         MODAL 1: MANUAL HOTSPOT INGESTION FORM (Create - Journey A)
          ==================================================================== -->
     <div class="modal-overlay" id="modal-manual-entry">
       <div class="modal-container">
@@ -388,29 +417,44 @@
           <div class="form-row">
             <div class="form-group">
               <label class="form-label" for="manual-lat">Latitude (°N)</label>
-              <input type="number" id="manual-lat" class="form-input" step="0.0001" value="21.1182" />
+              <input type="number" id="manual-lat" class="form-input" step="0.0001" min="-90" max="90" value="21.1182" required />
+              <span class="field-error" id="manual-lat-error"></span>
             </div>
             <div class="form-group">
               <label class="form-label" for="manual-lon">Longitude (°E)</label>
-              <input type="number" id="manual-lon" class="form-input" step="0.0001" value="72.6341" />
+              <input type="number" id="manual-lon" class="form-input" step="0.0001" min="-180" max="180" value="72.6341" required />
+              <span class="field-error" id="manual-lon-error"></span>
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-group">
               <label class="form-label" for="manual-frp">Fire Radiative Power (MW)</label>
-              <input type="number" id="manual-frp" class="form-input" step="0.1" value="4.8" />
+              <input type="number" id="manual-frp" class="form-input" step="0.1" min="0.01" value="4.8" required />
+              <span class="field-error" id="manual-frp-error"></span>
             </div>
             <div class="form-group">
-              <label class="form-label" for="manual-recurrence">Historical Recurrence Count</label>
-              <input type="number" id="manual-recurrence" class="form-input" step="1" value="1" />
+              <label class="form-checkbox-row" for="manual-recurring">
+                <input type="checkbox" id="manual-recurring" class="sop-checkbox" checked />
+                Recurring source
+              </label>
+              <div class="conditional-field" id="recurrence-field">
+                <label class="form-label" for="manual-recurrence">Recurrence Count</label>
+                <input type="number" id="manual-recurrence" class="form-input" step="1" min="0" value="1" />
+              </div>
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label" for="manual-dist">Dist to Industrial Polygon (m)</label>
-              <input type="number" id="manual-dist" class="form-input" step="10" value="120" />
+              <label class="form-checkbox-row" for="manual-near-industrial">
+                <input type="checkbox" id="manual-near-industrial" class="sop-checkbox" checked />
+                Near industrial zone
+              </label>
+              <div class="conditional-field" id="industrial-distance-field">
+                <label class="form-label" for="manual-dist">Distance to Industrial Polygon (m)</label>
+                <input type="number" id="manual-dist" class="form-input" step="10" min="0" value="120" />
+              </div>
             </div>
             <div class="form-group">
               <label class="form-label" for="manual-landcover">Land Cover Class</label>
@@ -424,6 +468,11 @@
           </div>
 
           <div class="form-group">
+            <label class="form-label" for="manual-detected-at">Detection Timestamp</label>
+            <input type="datetime-local" id="manual-detected-at" class="form-input" />
+          </div>
+
+          <div class="form-group">
             <label class="form-label" for="manual-tag">OpenStreetMap Infrastructure Tag</label>
             <input type="text" id="manual-tag" class="form-input" value="industrial=chemical" />
           </div>
@@ -432,10 +481,17 @@
           <div class="live-preview-box">
             <div style="font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Real-Time AI Multi-Modal Prediction:</div>
             <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;">
-              <span id="preview-class" style="font-size: 14px; font-weight: 800; color: #ef4444;">INDUSTRIAL FIRE</span>
-              <span id="preview-conf" style="font-family: monospace; font-weight: 700; color: #10b981;">75% Confidence</span>
+              <span id="preview-class" style="font-size: 14px; font-weight: 800; color: #e4572e;">INDUSTRIAL FIRE</span>
+              <span id="preview-conf" style="font-family: monospace; font-weight: 700; color: #7fc69a;">75% Confidence</span>
             </div>
             <ul id="preview-reasoning" class="reasoning-list" style="font-size: 11px;"></ul>
+          </div>
+          <div class="waveform-preview" aria-label="FRP waveform preview">
+            <svg viewBox="0 0 360 72" role="img" aria-label="Live waveform scaled to FRP">
+              <path class="waveform-grid" d="M0 36H360M0 18H360M0 54H360" />
+              <path class="waveform-line" d="M0 36 C18 36 18 36 30 36 S48 12 60 36 S78 60 90 36 S108 8 120 36 S138 60 150 36 S168 14 180 36 S198 58 210 36 S228 10 240 36 S258 62 270 36 S288 12 300 36 S318 58 330 36 S348 20 360 36" />
+            </svg>
+            <span>LIVE FRP SIGNAL</span>
           </div>
         </div>
 
@@ -447,7 +503,227 @@
     </div>
 
     <!-- ====================================================================
-         MODAL 2: COMMANDER OVERRIDE / RE-CLASSIFICATION
+         MODAL 6: REAL-TIME CLASSIFICATION PIPELINE (Journey B)
+         ==================================================================== -->
+    <div class="modal-overlay" id="modal-classification-pipeline">
+      <div class="modal-container pipeline-modal">
+        <div class="modal-header">
+          <div class="modal-title">Real-Time Classification Pipeline</div>
+          <span class="pipeline-latency-label" id="pipeline-latency-label">Normal latency</span>
+        </div>
+        <div class="modal-body">
+          <div class="pipeline-progress" id="pipeline-progress">
+            <div class="pipeline-step active" data-step="0"><span>01</span>Scanning</div>
+            <div class="pipeline-step" data-step="1"><span>02</span>Extracting Features</div>
+            <div class="pipeline-step" data-step="2"><span>03</span>Fusing Context</div>
+            <div class="pipeline-step" data-step="3"><span>04</span>Classifying</div>
+            <div class="pipeline-step" data-step="4"><span>05</span>Complete</div>
+          </div>
+          <label class="latency-control" for="pipeline-latency">
+            <span>Pipeline latency</span>
+            <input type="range" id="pipeline-latency" min="0" max="2" step="1" value="1" />
+            <span id="pipeline-latency-value">Normal</span>
+          </label>
+          <div class="pipeline-status" id="pipeline-status">Preparing telemetry...</div>
+          <div class="pipeline-result" id="pipeline-result" hidden>
+            <div class="result-card-header">
+              <span class="classification-badge unclassified" id="pipeline-result-badge">Unclassified</span>
+              <strong id="pipeline-result-confidence">0% confidence</strong>
+            </div>
+            <ul class="reasoning-list" id="pipeline-result-reasoning"></ul>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-command" id="btn-pipeline-back">Back to Dashboard</button>
+          <button class="btn-command primary" id="btn-pipeline-map" disabled>View on Map</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 2: EDIT RECORD FORM (Update with Re-Classification)
+         ==================================================================== -->
+    <div class="modal-overlay" id="modal-edit-record">
+      <div class="modal-container">
+        <div class="modal-header">
+          <div class="modal-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+            Edit Thermal Anomaly (Update)
+          </div>
+          <button class="close-panel-btn close-modal-trigger">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <input type="hidden" id="edit-record-id" />
+
+          <div class="form-group">
+            <label class="form-label" for="edit-label">Facility / Location Name</label>
+            <input type="text" id="edit-label" class="form-input" />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="edit-lat">Latitude (°N)</label>
+              <input type="number" id="edit-lat" class="form-input" step="0.0001" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="edit-lon">Longitude (°E)</label>
+              <input type="number" id="edit-lon" class="form-input" step="0.0001" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="edit-frp">Fire Radiative Power (MW)</label>
+              <input type="number" id="edit-frp" class="form-input" step="0.01" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="edit-recurrence">Historical Recurrence Count</label>
+              <input type="number" id="edit-recurrence" class="form-input" step="1" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="edit-dist">Dist to Industrial Polygon (m)</label>
+              <input type="number" id="edit-dist" class="form-input" step="1" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="edit-landcover">Land Cover Class</label>
+              <select id="edit-landcover" class="form-select">
+                <option value="built-up">built-up</option>
+                <option value="bare/mining">bare/mining</option>
+                <option value="cropland">cropland</option>
+                <option value="forest">forest</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="edit-tag">OpenStreetMap Infrastructure Tag</label>
+            <input type="text" id="edit-tag" class="form-input" />
+          </div>
+
+          <div class="form-checkbox-row">
+            <input type="checkbox" id="edit-reclassify" class="sop-checkbox" checked />
+            <label for="edit-reclassify">Re-trigger AI Multi-Modal Rule Classifier on Save</label>
+          </div>
+
+          <!-- Live Rule Classifier Preview for Edit -->
+          <div class="live-preview-box">
+            <div style="font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Dynamic Classifier Re-Evaluation:</div>
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;">
+              <span id="edit-preview-class" style="font-size: 14px; font-weight: 800; color: #00f2fe;">CLASSIFIED</span>
+              <span id="edit-preview-conf" style="font-family: monospace; font-weight: 700; color: #7fc69a;">--% Confidence</span>
+            </div>
+            <ul id="edit-preview-reasoning" class="reasoning-list" style="font-size: 11px;"></ul>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn-command close-modal-trigger">Cancel</button>
+          <button class="btn-command primary" id="btn-save-edit">Save Changes to IndexedDB</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 3: SETTINGS & STORAGE DATA CONTROLS
+         ==================================================================== -->
+    <div class="modal-overlay" id="modal-settings">
+      <div class="modal-container" style="max-width: 600px;">
+        <div class="modal-header">
+          <div class="modal-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            System Settings & Storage Engine
+          </div>
+          <button class="close-panel-btn close-modal-trigger">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Diagnostics Card -->
+          <div class="settings-stats-card">
+            <div class="settings-stat-item">
+              <span class="settings-stat-label">Active Database</span>
+              <span class="settings-stat-value" id="settings-stat-db">NexusCoreDB (v1)</span>
+            </div>
+            <div class="settings-stat-item">
+              <span class="settings-stat-label">Object Store</span>
+              <span class="settings-stat-value" id="settings-stat-store">thermalRecords</span>
+            </div>
+            <div class="settings-stat-item">
+              <span class="settings-stat-label">Stored Hotspots</span>
+              <span class="settings-stat-value" id="settings-stat-count">12 records</span>
+            </div>
+            <div class="settings-stat-item">
+              <span class="settings-stat-label">Storage Engine</span>
+              <span class="settings-stat-value" style="color: #34d399;">IndexedDB (Persistent)</span>
+            </div>
+          </div>
+
+          <!-- Seed Data Management Section -->
+          <div class="settings-section-card">
+            <span class="settings-section-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+              Seed Data Synchronization
+            </span>
+            <p class="settings-section-desc">
+              Re-imports the exact 12 pre-fused NASA FIRMS & OpenStreetMap records (Jamnagar & Jharia) and replaces any modified local records.
+            </p>
+            <div style="display: flex; gap: 10px; margin-top: 4px;">
+              <button class="btn-command" id="btn-settings-reload-seed">
+                Reload Seed Data (12 Records)
+              </button>
+            </div>
+          </div>
+
+          <!-- Backup & Restore -->
+          <div class="settings-section-card">
+            <span class="settings-section-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              Backup & Restore Dataset
+            </span>
+            <p class="settings-section-desc">
+              Export all stored anomalies to a portable JSON file, or restore/merge telemetry from an external JSON dump.
+            </p>
+            <div style="display: flex; gap: 10px; margin-top: 4px; align-items: center;">
+              <button class="btn-command" id="btn-settings-export">Export JSON</button>
+              <label class="btn-command" style="cursor: pointer; margin: 0;">
+                <input type="file" id="settings-import-file" accept=".json" style="display: none;" />
+                Import JSON File
+              </label>
+            </div>
+          </div>
+
+          <!-- Danger Zone: Clear All Data -->
+          <div class="danger-zone-card">
+            <span class="settings-section-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+              Danger Zone
+            </span>
+            <p class="settings-section-desc" style="color: #fca5a5;">
+              Wipes all records from the IndexedDB store. Map markers, tables, and statistics will be immediately cleared to 0.
+            </p>
+            <div style="margin-top: 4px;">
+              <button class="btn-command danger" id="btn-settings-clear-all">
+                Clear All Data (Wipe Store)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn-command close-modal-trigger">Close Settings</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 4: COMMANDER OVERRIDE / RE-CLASSIFICATION
          ==================================================================== -->
     <div class="modal-overlay" id="modal-override">
       <div class="modal-container">
@@ -491,7 +767,7 @@
     </div>
 
     <!-- ====================================================================
-         MODAL 3: SENTINEL-2 SWIR OPTICAL CROSS-CHECK SIMULATOR
+         MODAL 5: SENTINEL-2 SWIR OPTICAL CROSS-CHECK SIMULATOR
          ==================================================================== -->
     <div class="modal-overlay" id="modal-swir">
       <div class="modal-container" style="max-width: 620px;">
@@ -575,7 +851,7 @@
           window.NexusGIS.flyToRegion("jamnagar");
         }, 300);
 
-        console.log("[NEXUS CORE] System fully operational.");
+        console.log("[NEXUS CORE] System fully operational with Full CRUD.");
       } catch (err) {
         console.error("[NEXUS CORE] Boot failure:", err);
       }

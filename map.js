@@ -57,6 +57,10 @@ class GISMapEngine {
     this.pulseRingsGroup = L.layerGroup().addTo(this.map);
     this.markersGroup = L.layerGroup().addTo(this.map);
 
+    // The store loads before the map subscribes during application bootstrap.
+    // Render the current IndexedDB snapshot immediately as well as on later events.
+    this.renderHotspots(window.NexusApp.getFilteredRecords());
+
     // Invalidate size on resize
     window.addEventListener("resize", () => {
       this.map.invalidateSize();
@@ -64,7 +68,7 @@ class GISMapEngine {
 
     // Subscribe to store updates
     window.NexusApp.subscribe((event, payload) => {
-      if (event === "records_updated" || event === "reset_to_seed") {
+      if (event === "records_updated" || event === "reset_to_seed" || event === "all_data_cleared" || event === "record_deleted") {
         this.renderHotspots(window.NexusApp.getFilteredRecords());
       } else if (event === "active_record_changed") {
         this.highlightActiveMarker(payload ? payload.id : null);
@@ -142,12 +146,12 @@ class GISMapEngine {
 
   getColorForClass(classification) {
     switch (classification) {
-      case "industrial_fire": return "#ef4444"; // Red
-      case "gas_flare": return "#f59e0b";       // Amber / Orange
-      case "mining": return "#a855f7";          // Violet
-      case "agri_burn": return "#10b981";       // Emerald green
-      case "wildfire": return "#f97316";        // Deep orange
-      default: return "#64748b";                // Slate
+      case "industrial_fire": return "#e4572e";
+      case "gas_flare": return "#f2a93c";
+      case "mining": return "#4a7a96";
+      case "agri_burn": return "#b08d57";
+      case "wildfire": return "#4c8c6b";
+      default: return "#8d9a9d";
     }
   }
 
