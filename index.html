@@ -820,6 +820,52 @@
       </div>
     </div>
 
+    <footer class="app-footer">
+      <span>Thermal data: NASA FIRMS historical archive export, live-pulled for Jamnagar Gujarat, Jharia Jharkhand, Chhota Udepur Gujarat.</span>
+      <button class="footer-about-link" id="btn-open-about">About &amp; Compliance</button>
+    </footer>
+
+    <!-- Export Viewer -->
+    <div class="modal-overlay" id="modal-export">
+      <div class="modal-container export-modal">
+        <div class="modal-header">
+          <div class="modal-title">IndexedDB Export / Compliance Package</div>
+          <button class="close-panel-btn close-modal-trigger" title="Close export viewer">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+        <div class="export-viewer-wrap">
+          <pre id="export-json-viewer" class="export-json-viewer" aria-label="Syntax highlighted JSON export"></pre>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-command close-modal-trigger">Close</button>
+          <button class="btn-command" id="btn-copy-export">Copy to Clipboard</button>
+          <button class="btn-command primary" id="btn-download-export">Download .json</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- About / Compliance Panel -->
+    <div class="modal-overlay" id="modal-about">
+      <div class="modal-container about-modal">
+        <div class="modal-header">
+          <div class="modal-title">About &amp; Data Compliance</div>
+          <button class="close-panel-btn close-modal-trigger" title="Close about panel">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+        <div class="modal-body about-copy">
+          <p><strong>Thermal data:</strong> NASA FIRMS (historical archive export, live-pulled for regions: Jamnagar Gujarat, Jharia Jharkhand, Chhota Udepur Gujarat).</p>
+          <p><strong>Infrastructure data:</strong> OpenStreetMap (Overpass API).</p>
+          <p><strong>Classification:</strong> rule-based feature-fusion engine.</p>
+          <p>Exports include the complete current IndexedDB record set, timestamp, record count, and declared data sources. Manual edits remain local until explicitly reloaded from seed data.</p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-command primary close-modal-trigger">Close About</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Toast Notifications Target -->
     <div id="toast-container"></div>
   </div>

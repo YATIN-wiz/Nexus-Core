@@ -162,10 +162,7 @@ class UIEngine {
 
     const btnExport = document.getElementById("btn-export-data");
     if (btnExport) {
-      btnExport.addEventListener("click", () => {
-        window.NexusApp.exportDataAsJSON();
-        this.showToast("Telemetry records exported as JSON file.");
-      });
+      btnExport.addEventListener("click", () => this.openExportViewer());
     }
 
     // Manual Modal Inputs Live Classifier Preview
@@ -255,11 +252,24 @@ class UIEngine {
 
     const btnSettingsExport = document.getElementById("btn-settings-export");
     if (btnSettingsExport) {
-      btnSettingsExport.addEventListener("click", () => {
-        window.NexusApp.exportDataAsJSON();
-        this.showToast("Exporting database JSON...");
+      btnSettingsExport.addEventListener("click", () => this.openExportViewer());
+    }
+
+    const btnDownloadExport = document.getElementById("btn-download-export");
+    if (btnDownloadExport) {
+      btnDownloadExport.addEventListener("click", () => {
+        window.NexusApp.downloadExport();
+        this.showToast("Full IndexedDB dataset downloaded as JSON.");
       });
     }
+
+    const btnCopyExport = document.getElementById("btn-copy-export");
+    if (btnCopyExport) btnCopyExport.addEventListener("click", () => this.copyExportToClipboard());
+
+    const btnOpenAbout = document.getElementById("btn-open-about");
+    if (btnOpenAbout) btnOpenAbout.addEventListener("click", () => {
+      document.getElementById("modal-about").classList.add("active");
+    });
 
     const inputSettingsImport = document.getElementById("settings-import-file");
     if (inputSettingsImport) {
@@ -895,6 +905,38 @@ class UIEngine {
   }
 
   // 10. Settings & Data Management Modal (Reload Seed / Clear All)
+  openExportViewer() {
+    const modal = document.getElementById("modal-export");
+    const viewer = document.getElementById("export-json-viewer");
+    if (!modal || !viewer) return;
+    const json = window.NexusApp.getExportJSON();
+    viewer.innerHTML = this.highlightJSON(json);
+    modal.classList.add("active");
+  }
+
+  highlightJSON(json) {
+    const escaped = json.replace(/[&<>]/g, character => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;"
+    }[character]));
+    return escaped.replace(/("(?:\\.|[^"\\])*"\s*:)|("(?:\\.|[^"\\])*")|(-?\d+(?:\.\d+)?)|\b(true|false|null)\b/g, (token, key, string, number, literal) => {
+      if (key) return `<span class="json-key">${key.slice(0, -1)}</span>:`;
+      if (string) return `<span class="json-string">${string}</span>`;
+      if (number) return `<span class="json-number">${number}</span>`;
+      return `<span class="json-literal">${literal}</span>`;
+    });
+  }
+
+  async copyExportToClipboard() {
+    try {
+      await navigator.clipboard.writeText(window.NexusApp.getExportJSON());
+      this.showToast("Export JSON copied to clipboard.");
+    } catch (error) {
+      this.showToast("Clipboard access was blocked by the browser.");
+    }
+  }
+
   openSettingsModal() {
     const modal = document.getElementById("modal-settings");
     if (!modal) return;

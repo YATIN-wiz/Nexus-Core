@@ -1788,6 +1788,100 @@ button, input, select, textarea {
 }
 
 /* ========================================================================
+   EXPORT AND COMPLIANCE SURFACES
+   ======================================================================== */
+.app-footer {
+  position: fixed;
+  left: var(--sidebar-width);
+  right: 0;
+  bottom: 0;
+  z-index: 600;
+  min-height: 28px;
+  padding: 5px 14px 5px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: rgba(15, 20, 22, 0.94);
+  border-top: 1px solid var(--border-subtle);
+  color: var(--color-text-dim);
+  font-size: 10px;
+}
+
+.footer-about-link {
+  min-height: 30px;
+  border: 0;
+  padding: 4px 8px;
+  color: var(--color-accent-cyan);
+  background: transparent;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.footer-about-link:hover,
+.footer-about-link:focus-visible {
+  color: #d5f4f6;
+  text-decoration: underline;
+}
+
+.export-modal {
+  max-width: 920px;
+}
+
+.export-viewer-wrap {
+  min-height: 360px;
+  max-height: 62vh;
+  overflow: auto;
+  background: #101719;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.export-json-viewer {
+  min-height: 360px;
+  margin: 0;
+  padding: 18px;
+  color: #d6e3e5;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.65;
+  white-space: pre;
+  tab-size: 2;
+}
+
+.json-key { color: #8fd3dc; }
+.json-string { color: #b9e5c7; }
+.json-number { color: #ffd37c; }
+.json-literal { color: #ff9a78; }
+
+.about-modal {
+  max-width: 640px;
+}
+
+.about-copy {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.about-copy strong {
+  color: var(--color-text-main);
+}
+
+@media (max-width: 900px) {
+  .app-footer {
+    left: 0;
+  }
+
+  .app-footer > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* ========================================================================
    DESIGN SYSTEM COMPONENT OVERRIDES
    Shared tactile surfaces, semantic status colors, and accessible controls.
    ======================================================================== */

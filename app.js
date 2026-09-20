@@ -313,9 +313,10 @@ class ThermalDatabase {
 
       request.onsuccess = async (event) => {
         this.db = event.target.result;
-        // Check if database needs initial seeding
+        // Seed only on the first installation. An intentionally cleared store must stay empty.
         const count = await this.count();
-        if (count === 0) {
+        const seedInstalled = localStorage.getItem("nexuscore_seed_installed") === "true";
+        if (count === 0 && !seedInstalled) {
           console.log("[DB] Store empty. Injecting 12 real seed records...");
           await this.seedInitialData();
         }
@@ -837,18 +838,29 @@ class ApplicationStore {
     }
   }
 
-  exportDataAsJSON() {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
+  getExportPayload() {
+    return {
       exportedAt: new Date().toISOString(),
       recordCount: this.records.length,
+      dataSources: ["NASA FIRMS", "OpenStreetMap Overpass API"],
       records: this.records
-    }, null, 2));
+    };
+  }
+
+  getExportJSON() {
+    return JSON.stringify(this.getExportPayload(), null, 2);
+  }
+
+  downloadExport() {
+    const blob = new Blob([this.getExportJSON()], { type: "application/json;charset=utf-8" });
     const downloadAnchor = document.createElement("a");
-    downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `nexuscore_thermal_export_${Date.now()}.json`);
+    const objectUrl = URL.createObjectURL(blob);
+    downloadAnchor.href = objectUrl;
+    downloadAnchor.download = `nexuscore_thermal_export_${Date.now()}.json`;
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
+    URL.revokeObjectURL(objectUrl);
   }
 }
 
