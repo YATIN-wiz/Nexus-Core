@@ -306,6 +306,11 @@
                 <span id="detail-coords">22.3359°N, 69.8664°E</span>
               </div>
 
+              <div class="detection-meta-row">
+                <span><strong>Detected</strong> <span id="detail-detected-at">--</span></span>
+                <span><strong>Satellite</strong> <span id="detail-satellite">NASA FIRMS VIIRS 375m</span></span>
+              </div>
+
               <!-- FRP Gauge Meter -->
               <div class="frp-meter-block">
                 <div class="frp-meter-header">
@@ -335,6 +340,21 @@
               <div class="telemetry-item">
                 <div class="telemetry-item-label">OSM Industrial Tag</div>
                 <div class="telemetry-item-value" id="detail-osm-tag" style="font-size: 11px;">industrial=refinery</div>
+              </div>
+            </div>
+
+            <div class="context-summary-card">
+              <div>
+                <span class="telemetry-item-label">Spatial analysis radius</span>
+                <strong id="detail-analysis-radius">1,200 meters</strong>
+              </div>
+              <div>
+                <span class="telemetry-item-label">Infrastructure context</span>
+                <strong id="detail-infrastructure-context">1 nearest OSM context</strong>
+              </div>
+              <div>
+                <span class="telemetry-item-label">Operator risk category</span>
+                <strong id="detail-risk-category" class="risk-category-high">HIGH</strong>
               </div>
             </div>
 

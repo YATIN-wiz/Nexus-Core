@@ -165,6 +165,7 @@ class GISMapEngine {
 
     records.forEach(record => {
       const color = this.getColorForClass(record.classification);
+      const satelliteSource = record.source === "seed_import" ? "NASA FIRMS VIIRS 375m (seed)" : "Manual / operator input";
       // Scale radius by FRP
       const radius = Math.max(7, Math.min(22, 6 + Math.sqrt(record.frp) * 4));
 
@@ -183,10 +184,13 @@ class GISMapEngine {
       marker.bindTooltip(`
         <div class="popup-inner">
           <div class="popup-title">${record.locationLabel}</div>
+          <div class="popup-row"><span>Coordinates:</span> <strong>${record.latitude.toFixed(4)}, ${record.longitude.toFixed(4)}</strong></div>
+          <div class="popup-row"><span>Detected:</span> <strong>${new Date(record.detectedAt).toLocaleString()}</strong></div>
           <div class="popup-row"><span>Classification:</span> <strong style="color: ${color}; text-transform: uppercase;">${record.classification.replace('_', ' ')}</strong></div>
           <div class="popup-row"><span>FRP:</span> <strong>${record.frp.toFixed(2)} MW</strong></div>
           <div class="popup-row"><span>Recurrence:</span> <strong>${record.recurrenceCount} passes</strong></div>
           <div class="popup-row"><span>Confidence:</span> <strong>${Math.round(record.confidence * 100)}%</strong></div>
+          <div class="popup-row"><span>Satellite:</span> <strong>${satelliteSource}</strong></div>
         </div>
       `, {
         className: "custom-leaflet-popup",

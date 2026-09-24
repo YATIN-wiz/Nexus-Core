@@ -557,6 +557,8 @@ class UIEngine {
     badge.textContent = record.classification.replace("_", " ");
 
     document.getElementById("detail-coords").textContent = `${record.latitude.toFixed(4)}°N, ${record.longitude.toFixed(4)}°E`;
+    document.getElementById("detail-detected-at").textContent = new Date(record.detectedAt).toLocaleString();
+    document.getElementById("detail-satellite").textContent = record.source === "seed_import" ? "NASA FIRMS VIIRS 375m (seed)" : "Manual / operator input";
     document.getElementById("detail-frp").textContent = `${record.frp.toFixed(2)} MW`;
 
     // FRP Meter Bar (Scale out of 20MW max)
@@ -568,6 +570,15 @@ class UIEngine {
     document.getElementById("detail-recurrence").textContent = `${record.recurrenceCount} events`;
     document.getElementById("detail-osm-dist").textContent = record.nearestIndustrialDistM !== null ? `${Math.round(record.nearestIndustrialDistM)} meters` : "N/A";
     document.getElementById("detail-osm-tag").textContent = record.osmTag || "unassigned";
+
+    const risk = record.classification === "industrial_fire" || record.frp >= 5 ? "HIGH" : record.classification === "unclassified" ? "REVIEW" : "MONITOR";
+    const riskEl = document.getElementById("detail-risk-category");
+    if (riskEl) {
+      riskEl.textContent = risk;
+      riskEl.className = `risk-category-${risk.toLowerCase()}`;
+    }
+    const contextEl = document.getElementById("detail-infrastructure-context");
+    if (contextEl) contextEl.textContent = record.nearestIndustrialDistM !== null ? "1 nearest OSM context" : "No OSM context found";
 
     // AI Reasoning List
     const reasoningList = document.getElementById("detail-reasoning-list");
