@@ -228,10 +228,11 @@ class GISMapEngine {
         const buffer = L.circle([record.latitude, record.longitude], {
           radius: record.nearestIndustrialDistM,
           color: color,
-          weight: 1,
-          dashArray: "4, 6",
+          weight: 2.5,
+          opacity: 0.95,
+          dashArray: "7, 4",
           fillColor: color,
-          fillOpacity: 0.04,
+          fillOpacity: 0.16,
           interactive: false
         });
         buffer.addTo(this.bufferZonesGroup);

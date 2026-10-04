@@ -71,6 +71,10 @@ from geopy.distance import geodesic
 # CONFIG — edit this section
 # ─────────────────────────────────────────────────────────────────────────
 
+from datetime import date, timedelta
+
+CURRENT_YEAR = date.today().year
+
 FIRMS_MAP_KEY = "53769aa97d61d071eaf0c63eb5e7941d"
 
 # FIRMS source options: VIIRS_SNPP_NRT, VIIRS_NOAA20_NRT, MODIS_NRT
@@ -87,10 +91,11 @@ DAYS_PER_REQUEST = 5  # FIRMS area API hard caps this at 5
 # forest) instead of one region that's purely industrial.
 #
 # Defaults cover: Jamnagar refinery belt (dense industrial), Jharia
-# coalfield (mining), and a mixed agricultural/forest strip in eastern
-# Gujarat (to surface agri_burn / wildfire candidates). Edit freely —
-# add, remove, or resize boxes as needed. Keep each box small
-# (roughly 40km x 40km or less) to stay polite to the Overpass API.
+# coalfield (mining), a mixed agricultural/forest strip in eastern
+# Gujarat (to surface agri_burn / wildfire candidates), plus several
+# additional Indian industrial belts for broader prototype diversity.
+# Keep each box small (roughly 40km x 40km or less) to stay polite to
+# the Overpass API and to keep the offline seed dataset manageable.
 BBOXES = [
     {
         "west": 69.7, "south": 22.1, "east": 70.3, "north": 22.6,
@@ -104,6 +109,24 @@ BBOXES = [
         "west": 73.4, "south": 22.6, "east": 73.9, "north": 23.0,
         "region_label": "Chhota Udepur Agricultural/Forest Belt, Gujarat",
     },
+    {
+        "west": 72.5, "south": 21.6, "east": 73.0, "north": 22.0,
+        "region_label": "Dahej / Hazira LNG Terminal Belt, Gujarat",
+    },
+    {
+        "west": 82.0, "south": 22.2, "east": 82.5, "north": 22.6,
+        "region_label": "Korba Thermal Power Cluster, Chhattisgarh",
+    },
+    {
+        "west": 84.7, "south": 20.7, "east": 85.2, "north": 21.1,
+        "region_label": "Rourkela / Angul Steel Belt, Odisha",
+    },
+    {
+        "west": 75.0, "south": 30.0, "east": 76.0, "north": 31.0,
+        "region_label": "Punjab Stubble Burning Belt, Punjab",
+        "seasonal_start": f"{CURRENT_YEAR}-10-01",
+        "seasonal_end": f"{CURRENT_YEAR}-11-30",
+    },
 ]
 
 RECURRENCE_RADIUS_M = 1000   # hotspots within this radius = "same source"
@@ -116,22 +139,31 @@ OUTPUT_FILE = "seedData.json"
 # ─────────────────────────────────────────────────────────────────────────
 
 def fetch_firms_data(bbox):
-    """Pull historical FIRMS hotspots for the given bbox, paging backward
-    through DAY_RANGE_TOTAL days in DAYS_PER_REQUEST-sized windows using
-    the optional end-date parameter (without it, every request just
-    returns the same most-recent window)."""
+    """Pull FIRMS hotspots for a bbox, using the standard 60-day default
+    except for explicitly seasonal regions such as the Punjab stubble belt,
+    which should be evaluated on an October-November seasonal window."""
     from datetime import date, timedelta
     from io import StringIO
 
     all_rows = []
     bbox_str = f"{bbox['west']},{bbox['south']},{bbox['east']},{bbox['north']}"
 
-    days_fetched = 0
-    end_date = date.today()
+    # Allow an optional custom seasonal window per region. Otherwise use the
+    # default 60-day history window.
+    if bbox.get("seasonal_start") and bbox.get("seasonal_end"):
+        start_date = date.fromisoformat(bbox["seasonal_start"])
+        end_date = date.fromisoformat(bbox["seasonal_end"])
+        print(f"Using seasonal FIRMS window for {bbox['region_label']}: {start_date} -> {end_date}")
+    else:
+        end_date = date.today()
+        start_date = end_date - timedelta(days=DAY_RANGE_TOTAL - 1)
 
-    while days_fetched < DAY_RANGE_TOTAL:
-        chunk = min(DAYS_PER_REQUEST, DAY_RANGE_TOTAL - days_fetched)
-        end_date_str = end_date.strftime("%Y-%m-%d")
+    current_end = end_date
+    days_remaining = (end_date - start_date).days + 1
+
+    while days_remaining > 0:
+        chunk = min(DAYS_PER_REQUEST, days_remaining)
+        end_date_str = current_end.strftime("%Y-%m-%d")
         url = (
             f"https://firms.modaps.eosdis.nasa.gov/api/area/csv/"
             f"{FIRMS_MAP_KEY}/{FIRMS_SOURCE}/{bbox_str}/{chunk}/{end_date_str}"
@@ -151,8 +183,8 @@ def fetch_firms_data(bbox):
                 all_rows.append(df)
             print(f"  -> {len(df)} rows")
 
-        days_fetched += chunk
-        end_date -= timedelta(days=chunk)
+        days_remaining -= chunk
+        current_end -= timedelta(days=chunk)
         time.sleep(1)  # be polite to the API
 
     if not all_rows:
@@ -173,7 +205,9 @@ def fetch_firms_data(bbox):
 # ─────────────────────────────────────────────────────────────────────────
 
 def fetch_osm_industrial_features(bbox):
-    """Query Overpass for industrial/power/mining features in the given bbox."""
+    """Query Overpass for industrial/power/mining features in the bbox.
+    Retries transient server errors and falls back cleanly if the public API
+    remains unavailable, preserving the seeded prototype workflow."""
     south, west, north, east = bbox["south"], bbox["west"], bbox["north"], bbox["east"]
 
     query = f"""
@@ -194,17 +228,29 @@ def fetch_osm_industrial_features(bbox):
     """
 
     print("Querying Overpass API for industrial infrastructure...")
-    resp = requests.post(
-        "https://overpass-api.de/api/interpreter",
-        data={"data": query},
-        headers={
-            "User-Agent": "SIH2026-ThermalClassifier/1.0 (hackathon prototype; contact: student-project)",
-            "Accept": "application/json",
-        },
-        timeout=90,
-    )
-    resp.raise_for_status()
-    data = resp.json()
+    last_error = None
+    for attempt in range(3):
+        try:
+            resp = requests.post(
+                "https://overpass-api.de/api/interpreter",
+                data={"data": query},
+                headers={
+                    "User-Agent": "SIH2026-ThermalClassifier/1.0 (hackathon prototype; contact: student-project)",
+                    "Accept": "application/json",
+                },
+                timeout=120,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            break
+        except requests.RequestException as exc:
+            last_error = exc
+            if attempt < 2:
+                print(f"  Overpass request failed (attempt {attempt + 1}/3): {exc}. Retrying...")
+                time.sleep(2)
+                continue
+            print(f"  Overpass request failed for {bbox['region_label']} after retries: {exc}.")
+            return []
 
     features = []
     for el in data.get("elements", []):
@@ -409,18 +455,37 @@ def main():
         r["confidence"] = confidence
         r["reasoning"] = reasoning
         r["status"] = "classified"
-        del r["sourceRegion"]  # internal-only field, drop before export
 
     # Trim to a manageable, demo-friendly seed size, keeping variety
-    # across classifications if possible
+    # across classifications and regions if possible
     by_class = {}
     for r in all_records:
         by_class.setdefault(r["classification"], []).append(r)
 
+    by_class_region = {}
+    for r in all_records:
+        by_class_region.setdefault(r["classification"], {}).setdefault(
+            r["sourceRegion"], []
+        ).append(r)
+
     final_seed = []
-    for cls, items in by_class.items():
-        final_seed.extend(items[:4])  # up to 4 per class for variety
+    region_order = [bbox["region_label"] for bbox in BBOXES]
+    for cls, region_groups in by_class_region.items():
+        kept_for_class = 0
+        max_region_records = max((len(items) for items in region_groups.values()), default=0)
+        for index in range(max_region_records):
+            for region in region_order:
+                items = region_groups.get(region, [])
+                if index < len(items):
+                    final_seed.append(items[index])
+                    kept_for_class += 1
+                    if kept_for_class == 4:
+                        break
+            if kept_for_class == 4:
+                break
     final_seed = final_seed[:18]  # slightly higher cap since multi-region
+    for r in final_seed:
+        del r["sourceRegion"]
 
     output = {
         "generatedAt": datetime.now(timezone.utc).isoformat(),

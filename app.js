@@ -11,275 +11,275 @@
 // ============================================================================
 const EXACT_SEED_DATA = [
   {
-    "id": "11dfae27-e6d7-4bbb-b6dc-32b2a0fac9fb",
-    "locationLabel": "Essar Power",
-    "latitude": 22.31089,
-    "longitude": 69.71923,
-    "detectedAt": "2026-09-18T21:44:00+00:00",
-    "frp": 1.74,
-    "nearestIndustrialDistM": 806.1,
-    "osmTag": "landuse=industrial",
-    "source": "seed_import",
-    "status": "classified",
-    "createdAt": "2026-09-20T13:38:15.679845+00:00",
-    "updatedAt": "2026-09-20T13:38:15.679845+00:00",
-    "recurrenceCount": 0,
-    "landCoverClass": "built-up",
-    "classification": "industrial_fire",
-    "confidence": 0.75,
-    "reasoning": [
-      "Land cover: built-up",
-      "Distance to nearest industrial polygon: 806m",
-      "Recurrence: 0 (low-moderate)"
-    ]
-  },
-  {
-    "id": "dcd1d9be-bde9-4386-98fd-8833d3417b9d",
-    "locationLabel": "Reliance Refinery",
-    "latitude": 22.33592,
-    "longitude": 69.86636,
-    "detectedAt": "2026-09-19T21:25:00+00:00",
-    "frp": 3.12,
-    "nearestIndustrialDistM": 98.6,
-    "osmTag": "industrial=refinery",
-    "source": "seed_import",
-    "status": "classified",
-    "createdAt": "2026-09-20T13:38:15.711916+00:00",
-    "updatedAt": "2026-09-20T13:38:15.711916+00:00",
-    "recurrenceCount": 5,
-    "landCoverClass": "built-up",
-    "classification": "industrial_fire",
-    "confidence": 0.75,
-    "reasoning": [
-      "Land cover: built-up",
-      "Distance to nearest industrial polygon: 99m",
-      "Recurrence: 5 (low-moderate)"
-    ]
-  },
-  {
-    "id": "b8acc584-9d0d-4589-b883-ed4aa95a706a",
+    "id": "291492d8-9761-4403-9b3f-765428daa591",
     "locationLabel": "Unnamed facility",
-    "latitude": 22.57542,
-    "longitude": 70.22902,
-    "detectedAt": "2026-09-19T21:25:00+00:00",
-    "frp": 0.75,
-    "nearestIndustrialDistM": 600.1,
+    "latitude": 22.33992,
+    "longitude": 69.85526,
+    "detectedAt": "2026-09-29T21:38:00+00:00",
+    "frp": 1.66,
+    "nearestIndustrialDistM": 580.9,
     "osmTag": "landuse=industrial",
     "source": "seed_import",
     "status": "classified",
-    "createdAt": "2026-09-20T13:38:15.742142+00:00",
-    "updatedAt": "2026-09-20T13:38:15.742142+00:00",
-    "recurrenceCount": 0,
-    "landCoverClass": "built-up",
-    "classification": "industrial_fire",
-    "confidence": 0.75,
-    "reasoning": [
-      "Land cover: built-up",
-      "Distance to nearest industrial polygon: 600m",
-      "Recurrence: 0 (low-moderate)"
-    ]
-  },
-  {
-    "id": "150b6090-2217-4e89-ad4e-1c893bd73f4b",
-    "locationLabel": "Reliance Refinery",
-    "latitude": 22.33524,
-    "longitude": 69.86731,
-    "detectedAt": "2026-09-10T20:55:00+00:00",
-    "frp": 3.02,
-    "nearestIndustrialDistM": 186.9,
-    "osmTag": "industrial=refinery",
-    "source": "seed_import",
-    "status": "classified",
-    "createdAt": "2026-09-20T13:38:15.770362+00:00",
-    "updatedAt": "2026-09-20T13:38:15.770362+00:00",
-    "recurrenceCount": 5,
-    "landCoverClass": "built-up",
-    "classification": "industrial_fire",
-    "confidence": 0.75,
-    "reasoning": [
-      "Land cover: built-up",
-      "Distance to nearest industrial polygon: 187m",
-      "Recurrence: 5 (low-moderate)"
-    ]
-  },
-  {
-    "id": "52203f58-e545-4789-8492-bdd8f916a4ff",
-    "locationLabel": "Reliance Refinery",
-    "latitude": 22.34504,
-    "longitude": 69.87063,
-    "detectedAt": "2026-08-24T21:12:00+00:00",
-    "frp": 1.78,
-    "nearestIndustrialDistM": 1004.6,
-    "osmTag": "industrial=refinery",
-    "source": "seed_import",
-    "status": "classified",
-    "createdAt": "2026-09-20T13:38:15.997858+00:00",
-    "updatedAt": "2026-09-20T13:38:15.997858+00:00",
+    "createdAt": "2026-10-04T14:03:04.142653+00:00",
+    "updatedAt": "2026-10-04T14:03:04.142653+00:00",
     "recurrenceCount": 3,
-    "landCoverClass": "bare/mining",
-    "classification": "mining",
-    "confidence": 0.68,
+    "landCoverClass": "built-up",
+    "classification": "industrial_fire",
+    "confidence": 0.75,
     "reasoning": [
-      "Land cover: bare/mining",
-      "Distance to nearest industrial tag: 1005m"
+      "Land cover: built-up",
+      "Distance to nearest industrial polygon: 581m",
+      "Recurrence: 3 (low-moderate)"
     ]
   },
   {
-    "id": "232c59c3-72c7-4d85-8c7a-e231b541f7f5",
-    "locationLabel": "Unnamed facility",
-    "latitude": 23.77644,
-    "longitude": 86.20872,
-    "detectedAt": "2026-09-15T08:33:00+00:00",
-    "frp": 1.67,
-    "nearestIndustrialDistM": 1247.7,
+    "id": "78653987-ae86-450e-b4f4-9a002a6b9273",
+    "locationLabel": "Cluster 8 and Cluster 9 Coal Mines",
+    "latitude": 23.73756,
+    "longitude": 86.4333,
+    "detectedAt": "2026-10-04T07:33:00+00:00",
+    "frp": 10.27,
+    "nearestIndustrialDistM": 871.7,
     "osmTag": "landuse=quarry",
     "source": "seed_import",
     "status": "classified",
-    "createdAt": "2026-09-20T13:39:04.548045+00:00",
-    "updatedAt": "2026-09-20T13:39:04.548045+00:00",
-    "recurrenceCount": 57,
-    "landCoverClass": "bare/mining",
-    "classification": "mining",
-    "confidence": 0.68,
+    "createdAt": "2026-10-04T14:03:22.501606+00:00",
+    "updatedAt": "2026-10-04T14:03:22.501606+00:00",
+    "recurrenceCount": 25,
+    "landCoverClass": "built-up",
+    "classification": "industrial_fire",
+    "confidence": 0.75,
     "reasoning": [
-      "Land cover: bare/mining",
-      "Distance to nearest industrial tag: 1248m"
+      "Land cover: built-up",
+      "Distance to nearest industrial polygon: 872m",
+      "Recurrence: 25 (low-moderate)"
     ]
   },
   {
-    "id": "b682b357-78b0-46bd-ba53-0cd15a854585",
+    "id": "4e2bbbef-e57f-4c85-9ea8-2394e82f60ae",
     "locationLabel": "Unnamed facility",
-    "latitude": 23.78321,
-    "longitude": 86.20798,
-    "detectedAt": "2026-09-15T08:33:00+00:00",
-    "frp": 6.32,
-    "nearestIndustrialDistM": 1220.6,
-    "osmTag": "landuse=quarry",
+    "latitude": 21.794,
+    "longitude": 72.64848,
+    "detectedAt": "2026-10-02T20:42:00+00:00",
+    "frp": 4.07,
+    "nearestIndustrialDistM": 188.6,
+    "osmTag": "landuse=industrial",
     "source": "seed_import",
     "status": "classified",
-    "createdAt": "2026-09-20T13:39:04.618725+00:00",
-    "updatedAt": "2026-09-20T13:39:04.618725+00:00",
-    "recurrenceCount": 56,
-    "landCoverClass": "bare/mining",
-    "classification": "mining",
-    "confidence": 0.68,
+    "createdAt": "2026-10-04T14:04:38.398835+00:00",
+    "updatedAt": "2026-10-04T14:04:38.398835+00:00",
+    "recurrenceCount": 4,
+    "landCoverClass": "built-up",
+    "classification": "industrial_fire",
+    "confidence": 0.75,
     "reasoning": [
-      "Land cover: bare/mining",
-      "Distance to nearest industrial tag: 1221m"
+      "Land cover: built-up",
+      "Distance to nearest industrial polygon: 189m",
+      "Recurrence: 4 (low-moderate)"
     ]
   },
   {
-    "id": "9bad346d-56cb-4f71-9043-32ff78998ff8",
+    "id": "dd4a2f7b-8152-4e05-b1c7-e465a48de44e",
     "locationLabel": "Unnamed facility",
-    "latitude": 23.67751,
-    "longitude": 86.39614,
-    "detectedAt": "2026-09-15T19:17:00+00:00",
-    "frp": 1.58,
-    "nearestIndustrialDistM": 1057.4,
+    "latitude": 22.35922,
+    "longitude": 82.30325,
+    "detectedAt": "2026-09-29T07:29:00+00:00",
+    "frp": 5.29,
+    "nearestIndustrialDistM": 948.3,
     "osmTag": "landuse=quarry",
     "source": "seed_import",
     "status": "classified",
-    "createdAt": "2026-09-20T13:39:04.682498+00:00",
-    "updatedAt": "2026-09-20T13:39:04.682498+00:00",
-    "recurrenceCount": 107,
-    "landCoverClass": "bare/mining",
-    "classification": "mining",
-    "confidence": 0.68,
+    "createdAt": "2026-10-04T14:04:54.086226+00:00",
+    "updatedAt": "2026-10-04T14:04:54.086226+00:00",
+    "recurrenceCount": 19,
+    "landCoverClass": "built-up",
+    "classification": "industrial_fire",
+    "confidence": 0.75,
     "reasoning": [
-      "Land cover: bare/mining",
-      "Distance to nearest industrial tag: 1057m"
+      "Land cover: built-up",
+      "Distance to nearest industrial polygon: 948m",
+      "Recurrence: 19 (low-moderate)"
     ]
   },
   {
-    "id": "d7f8e866-b9c6-456e-ae29-8d49ad23c75d",
+    "id": "2c2f0ca5-81d5-475a-b12b-97f8fbde0eee",
     "locationLabel": "Unnamed facility",
-    "latitude": 23.77469,
-    "longitude": 86.36554,
-    "detectedAt": "2026-09-15T06:50:00+00:00",
-    "frp": 9.27,
-    "nearestIndustrialDistM": 124.6,
+    "latitude": 23.67829,
+    "longitude": 86.39813,
+    "detectedAt": "2026-10-04T07:33:00+00:00",
+    "frp": 10.35,
+    "nearestIndustrialDistM": 1065.3,
     "osmTag": "landuse=quarry",
     "source": "seed_import",
     "status": "classified",
-    "createdAt": "2026-09-20T13:39:04.406468+00:00",
-    "updatedAt": "2026-09-20T13:39:04.406468+00:00",
+    "createdAt": "2026-10-04T14:03:22.148577+00:00",
+    "updatedAt": "2026-10-04T14:03:22.148577+00:00",
     "recurrenceCount": 44,
-    "landCoverClass": "built-up",
-    "classification": "gas_flare",
-    "confidence": 0.82,
+    "landCoverClass": "bare/mining",
+    "classification": "mining",
+    "confidence": 0.68,
     "reasoning": [
-      "Recurrence: 44 nearby detections in dataset window",
-      "Distance to nearest industrial polygon: 125m",
-      "FRP: 9.3MW (moderate, consistent with flare)"
+      "Land cover: bare/mining",
+      "Distance to nearest industrial tag: 1065m"
     ]
   },
   {
-    "id": "120d812c-eb74-4001-af43-3376bd3d88de",
+    "id": "631fb1e9-606a-4447-8b27-68a382ebda72",
     "locationLabel": "Unnamed facility",
-    "latitude": 23.77511,
-    "longitude": 86.36607,
-    "detectedAt": "2026-09-15T06:50:00+00:00",
-    "frp": 7.08,
-    "nearestIndustrialDistM": 169.2,
+    "latitude": 22.35602,
+    "longitude": 82.30412,
+    "detectedAt": "2026-09-29T19:55:00+00:00",
+    "frp": 1.63,
+    "nearestIndustrialDistM": 1110.1,
     "osmTag": "landuse=quarry",
     "source": "seed_import",
     "status": "classified",
-    "createdAt": "2026-09-20T13:39:04.473069+00:00",
-    "updatedAt": "2026-09-20T13:39:04.473069+00:00",
-    "recurrenceCount": 46,
-    "landCoverClass": "built-up",
-    "classification": "gas_flare",
-    "confidence": 0.82,
+    "createdAt": "2026-10-04T14:04:54.086226+00:00",
+    "updatedAt": "2026-10-04T14:04:54.086226+00:00",
+    "recurrenceCount": 19,
+    "landCoverClass": "bare/mining",
+    "classification": "mining",
+    "confidence": 0.68,
     "reasoning": [
-      "Recurrence: 46 nearby detections in dataset window",
-      "Distance to nearest industrial polygon: 169m",
-      "FRP: 7.1MW (moderate, consistent with flare)"
+      "Land cover: bare/mining",
+      "Distance to nearest industrial tag: 1110m"
     ]
   },
   {
-    "id": "6992957b-bb7a-4dba-8183-3c922dee094f",
+    "id": "a67140b2-0527-4da0-81e1-a7e567b98bb5",
     "locationLabel": "Unnamed facility",
-    "latitude": 23.68415,
-    "longitude": 86.39152,
-    "detectedAt": "2026-09-15T19:17:00+00:00",
-    "frp": 1.58,
-    "nearestIndustrialDistM": 291.6,
-    "osmTag": "landuse=quarry",
+    "latitude": 20.88697,
+    "longitude": 84.9801,
+    "detectedAt": "2026-10-04T07:33:00+00:00",
+    "frp": 3.92,
+    "nearestIndustrialDistM": 1062.2,
+    "osmTag": "landuse=industrial",
     "source": "seed_import",
     "status": "classified",
-    "createdAt": "2026-09-20T13:39:04.756267+00:00",
-    "updatedAt": "2026-09-20T13:39:04.756267+00:00",
-    "recurrenceCount": 86,
-    "landCoverClass": "built-up",
-    "classification": "gas_flare",
-    "confidence": 0.82,
+    "createdAt": "2026-10-04T14:05:41.713856+00:00",
+    "updatedAt": "2026-10-04T14:05:41.713856+00:00",
+    "recurrenceCount": 16,
+    "landCoverClass": "bare/mining",
+    "classification": "mining",
+    "confidence": 0.68,
     "reasoning": [
-      "Recurrence: 86 nearby detections in dataset window",
-      "Distance to nearest industrial polygon: 292m",
-      "FRP: 1.6MW (moderate, consistent with flare)"
+      "Land cover: bare/mining",
+      "Distance to nearest industrial tag: 1062m"
     ]
   },
   {
-    "id": "3affa16d-1596-4d43-a9f0-171cd9fe8245",
-    "locationLabel": "Cluster 11 and Cluster 7 (BCCL) Coal Mines",
-    "latitude": 23.76515,
-    "longitude": 86.40034,
-    "detectedAt": "2026-09-15T19:17:00+00:00",
-    "frp": 2.23,
-    "nearestIndustrialDistM": 405.8,
+    "id": "c9963fbd-9623-4e5c-94a0-5e633aee3df0",
+    "locationLabel": "Unnamed facility",
+    "latitude": 23.71351,
+    "longitude": 86.4496,
+    "detectedAt": "2026-10-04T07:33:00+00:00",
+    "frp": 4.81,
+    "nearestIndustrialDistM": 2248.8,
     "osmTag": "landuse=quarry",
     "source": "seed_import",
     "status": "classified",
-    "createdAt": "2026-09-20T13:39:05.805394+00:00",
-    "updatedAt": "2026-09-20T13:39:05.805394+00:00",
-    "recurrenceCount": 128,
+    "createdAt": "2026-10-04T14:03:22.406491+00:00",
+    "updatedAt": "2026-10-04T14:03:22.406491+00:00",
+    "recurrenceCount": 22,
+    "landCoverClass": "bare/mining",
+    "classification": "mining",
+    "confidence": 0.68,
+    "reasoning": [
+      "Land cover: bare/mining",
+      "Distance to nearest industrial tag: 2249m"
+    ]
+  },
+  {
+    "id": "ea163802-dcef-4bb3-abc2-a0ec93cd9879",
+    "locationLabel": "Unnamed facility",
+    "latitude": 23.68431,
+    "longitude": 86.39316,
+    "detectedAt": "2026-10-04T07:33:00+00:00",
+    "frp": 5.73,
+    "nearestIndustrialDistM": 249.5,
+    "osmTag": "landuse=quarry",
+    "source": "seed_import",
+    "status": "classified",
+    "createdAt": "2026-10-04T14:03:22.299511+00:00",
+    "updatedAt": "2026-10-04T14:03:22.299511+00:00",
+    "recurrenceCount": 38,
     "landCoverClass": "built-up",
     "classification": "gas_flare",
     "confidence": 0.82,
     "reasoning": [
-      "Recurrence: 128 nearby detections in dataset window",
-      "Distance to nearest industrial polygon: 406m",
-      "FRP: 2.2MW (moderate, consistent with flare)"
+      "Recurrence: 38 nearby detections in dataset window",
+      "Distance to nearest industrial polygon: 250m",
+      "FRP: 5.7MW (moderate, consistent with flare)"
+    ]
+  },
+  {
+    "id": "eebbe6a4-fd3d-4963-ab9d-bfd93ba42af3",
+    "locationLabel": "Bhubhaneshwari coal mine",
+    "latitude": 20.96978,
+    "longitude": 85.17412,
+    "detectedAt": "2026-10-04T07:33:00+00:00",
+    "frp": 9.65,
+    "nearestIndustrialDistM": 423.6,
+    "osmTag": "landuse=quarry",
+    "source": "seed_import",
+    "status": "classified",
+    "createdAt": "2026-10-04T14:05:41.754841+00:00",
+    "updatedAt": "2026-10-04T14:05:41.754841+00:00",
+    "recurrenceCount": 94,
+    "landCoverClass": "built-up",
+    "classification": "gas_flare",
+    "confidence": 0.82,
+    "reasoning": [
+      "Recurrence: 94 nearby detections in dataset window",
+      "Distance to nearest industrial polygon: 424m",
+      "FRP: 9.7MW (moderate, consistent with flare)"
+    ]
+  },
+  {
+    "id": "69ee01ca-6851-4bb6-adde-d235075e756f",
+    "locationLabel": "Unnamed facility",
+    "latitude": 23.6854,
+    "longitude": 86.39377,
+    "detectedAt": "2026-09-29T19:55:00+00:00",
+    "frp": 2.29,
+    "nearestIndustrialDistM": 163.2,
+    "osmTag": "landuse=quarry",
+    "source": "seed_import",
+    "status": "classified",
+    "createdAt": "2026-10-04T14:03:25.022770+00:00",
+    "updatedAt": "2026-10-04T14:03:25.022770+00:00",
+    "recurrenceCount": 35,
+    "landCoverClass": "built-up",
+    "classification": "gas_flare",
+    "confidence": 0.82,
+    "reasoning": [
+      "Recurrence: 35 nearby detections in dataset window",
+      "Distance to nearest industrial polygon: 163m",
+      "FRP: 2.3MW (moderate, consistent with flare)"
+    ]
+  },
+  {
+    "id": "64713b4e-53ba-4170-bae4-3663bb474c60",
+    "locationLabel": "Bhubhaneshwari coal mine",
+    "latitude": 20.96909,
+    "longitude": 85.17435,
+    "detectedAt": "2026-09-29T07:29:00+00:00",
+    "frp": 9.73,
+    "nearestIndustrialDistM": 494.4,
+    "osmTag": "landuse=quarry",
+    "source": "seed_import",
+    "status": "classified",
+    "createdAt": "2026-10-04T14:05:41.838273+00:00",
+    "updatedAt": "2026-10-04T14:05:41.838273+00:00",
+    "recurrenceCount": 93,
+    "landCoverClass": "built-up",
+    "classification": "gas_flare",
+    "confidence": 0.82,
+    "reasoning": [
+      "Recurrence: 93 nearby detections in dataset window",
+      "Distance to nearest industrial polygon: 494m",
+      "FRP: 9.7MW (moderate, consistent with flare)"
     ]
   }
 ];
@@ -290,6 +290,11 @@ const EXACT_SEED_DATA = [
 const DB_NAME = "NexusCoreDB";
 const DB_VERSION = 1;
 const STORE_NAME = "thermalRecords";
+const REVIEW_CONFIDENCE_THRESHOLD = 0.5;
+
+function isReviewQueueRecord(record) {
+  return record.classification === "unclassified" || record.confidence < REVIEW_CONFIDENCE_THRESHOLD;
+}
 
 class ThermalDatabase {
   constructor() {
@@ -641,6 +646,13 @@ class ApplicationStore {
     this.notify("records_updated", this.records);
   }
 
+  async getReviewQueueRecords() {
+    const records = await this.db.getAll();
+    return records
+      .filter(isReviewQueueRecord)
+      .sort((a, b) => a.confidence - b.confidence || a.detectedAt.localeCompare(b.detectedAt));
+  }
+
   getFilteredRecords() {
     let filtered = [...this.records];
 
@@ -736,6 +748,7 @@ class ApplicationStore {
     await this.db.put(updated);
     await this.reloadRecords();
     if (this.activeRecordId === id) this.notify("active_record_changed", updated);
+    this.notify("record_classified", updated);
     return updated;
   }
 
@@ -754,6 +767,7 @@ class ApplicationStore {
     if (this.activeRecordId === id) {
       this.notify("active_record_changed", updated);
     }
+    if (updates.classification !== undefined) this.notify("record_reclassified", updated);
     return updated;
   }
 
@@ -788,6 +802,7 @@ class ApplicationStore {
     if (this.activeRecordId === id) {
       this.notify("active_record_changed", updated);
     }
+    if (classificationResult) this.notify("record_reclassified", updated);
     return updated;
   }
 

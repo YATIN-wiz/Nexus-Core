@@ -15,6 +15,11 @@ class UIEngine {
     this.editingRecordId = null;
     this.pipelineRecordId = null;
     this.pipelineTimer = null;
+    this.activeView = "map";
+    this.reviewQueueRenderToken = 0;
+    this.demoAlertTimer = null;
+    this.facilityRankingSortKey = "anomalousCount";
+    this.facilityRankingSortDirection = "desc";
   }
 
   init() {
@@ -25,10 +30,15 @@ class UIEngine {
     // Subscribe to state updates
     window.NexusApp.subscribe((event, payload) => {
       this.updateTelemetryView();
+      if (this.activeView === "review") this.renderReviewQueue();
+      if (this.activeView === "rankings") this.renderFacilityRankings();
       if (event === "active_record_changed") {
         this.renderIncidentPanel(payload);
       } else if (event === "all_data_cleared") {
         this.renderIncidentPanel(null);
+      }
+      if (event === "record_classified" || event === "record_reclassified") {
+        this.showDemoAlert(payload);
       }
     });
 
@@ -71,6 +81,15 @@ class UIEngine {
         window.NexusApp.role = event.target.value;
         window.NexusApp.notify("records_updated", window.NexusApp.records);
         this.renderIncidentPanel(window.NexusApp.getActiveRecord());
+      });
+    }
+
+    const dashboardSidebarToggle = document.getElementById("btn-toggle-dashboard-sidebar");
+    if (dashboardSidebarToggle) {
+      dashboardSidebarToggle.addEventListener("click", () => {
+        const sidebar = document.getElementById("telemetry-sidebar");
+        const isOpen = sidebar.classList.toggle("mobile-open");
+        dashboardSidebarToggle.setAttribute("aria-expanded", String(isOpen));
       });
     }
 
@@ -127,7 +146,9 @@ class UIEngine {
     if (toggleBuffers) {
       toggleBuffers.addEventListener("click", () => {
         const active = toggleBuffers.classList.toggle("active");
+        toggleBuffers.setAttribute("aria-pressed", String(active));
         window.NexusGIS.toggleBufferZones(active);
+        this.showToast(active ? "OSM geofence buffers shown." : "OSM geofence buffers hidden.");
       });
     }
 
@@ -146,6 +167,29 @@ class UIEngine {
     if (closePanelBtn) {
       closePanelBtn.addEventListener("click", () => {
         window.NexusApp.setActiveRecord(null);
+      });
+    }
+    this.bindIncidentPanelResize();
+
+    const dismissDemoAlert = document.getElementById("demo-alert-dismiss");
+    if (dismissDemoAlert) dismissDemoAlert.addEventListener("click", () => this.dismissDemoAlert());
+
+    const reviewQueueKpi = document.getElementById("kpi-review-queue");
+    if (reviewQueueKpi) reviewQueueKpi.addEventListener("click", () => this.openReviewQueue());
+    const returnToMap = document.getElementById("btn-return-to-map");
+    if (returnToMap) returnToMap.addEventListener("click", () => this.returnToMap());
+    const openFacilityRankings = document.getElementById("btn-open-facility-rankings");
+    if (openFacilityRankings) openFacilityRankings.addEventListener("click", () => this.openFacilityRankings());
+    const rankingsBackToMap = document.getElementById("btn-rankings-back-to-map");
+    if (rankingsBackToMap) rankingsBackToMap.addEventListener("click", () => this.returnToMap());
+    document.querySelectorAll("[data-ranking-sort]").forEach(button => {
+      button.addEventListener("click", () => this.sortFacilityRankings(button.dataset.rankingSort));
+    });
+
+    const openFacilityTrend = document.getElementById("btn-open-facility-trend");
+    if (openFacilityTrend) {
+      openFacilityTrend.addEventListener("click", () => {
+        this.openFacilityTrend(window.NexusApp.getActiveRecord());
       });
     }
 
@@ -318,6 +362,7 @@ class UIEngine {
     const elMining = document.getElementById("kpi-mining");
     const elAvgFrp = document.getElementById("kpi-avg-frp");
     const elAvgConf = document.getElementById("kpi-avg-conf");
+    const elReviewCount = document.getElementById("kpi-review-count");
     const elDrawerCount = document.getElementById("drawer-count");
 
     if (elTotal) elTotal.textContent = all.length;
@@ -326,6 +371,7 @@ class UIEngine {
     if (elMining) elMining.textContent = miningCount;
     if (elAvgFrp) elAvgFrp.textContent = `${avgFrp} MW`;
     if (elAvgConf) elAvgConf.textContent = `${avgConf}%`;
+    if (elReviewCount) elReviewCount.textContent = all.filter(isReviewQueueRecord).length;
     if (elDrawerCount) elDrawerCount.textContent = `${filtered.length} records`;
 
     // Render Canvas Charts
@@ -334,6 +380,290 @@ class UIEngine {
 
     // Render Table in Bottom Drawer
     this.renderTable(filtered);
+  }
+
+  showDemoAlert(record) {
+    if (!record || record.classification !== "industrial_fire" || record.confidence <= 0.7) return;
+
+    const banner = document.getElementById("demo-alert-banner");
+    if (!banner) return;
+
+    document.getElementById("demo-alert-facility").textContent = record.locationLabel;
+    document.getElementById("demo-alert-details").textContent =
+      `${record.classification.replaceAll("_", " ")} | ${Math.round(record.confidence * 100)}% confidence`;
+    banner.classList.add("visible");
+    banner.setAttribute("aria-hidden", "false");
+
+    if (this.demoAlertTimer) clearTimeout(this.demoAlertTimer);
+    this.demoAlertTimer = setTimeout(() => this.dismissDemoAlert(), 6000);
+  }
+
+  dismissDemoAlert() {
+    const banner = document.getElementById("demo-alert-banner");
+    if (banner) {
+      banner.classList.remove("visible");
+      banner.setAttribute("aria-hidden", "true");
+    }
+    if (this.demoAlertTimer) clearTimeout(this.demoAlertTimer);
+    this.demoAlertTimer = null;
+  }
+
+  openReviewQueue() {
+    this.activeView = "review";
+    const workspace = document.querySelector(".workspace-body");
+    workspace.classList.remove("facility-rankings-active");
+    workspace.classList.add("review-queue-active");
+    this.renderReviewQueue();
+  }
+
+  openFacilityRankings() {
+    this.activeView = "rankings";
+    const workspace = document.querySelector(".workspace-body");
+    workspace.classList.remove("review-queue-active");
+    workspace.classList.add("facility-rankings-active");
+    this.renderFacilityRankings();
+  }
+
+  returnToMap() {
+    this.activeView = "map";
+    this.reviewQueueRenderToken++;
+    const workspace = document.querySelector(".workspace-body");
+    workspace.classList.remove("review-queue-active", "facility-rankings-active");
+    requestAnimationFrame(() => window.NexusGIS.map.invalidateSize());
+  }
+
+  aggregateFacilityRankings(records) {
+    const facilities = new Map();
+    records.forEach(record => {
+      const locationLabel = record.locationLabel || "Unnamed facility";
+      if (!facilities.has(locationLabel)) {
+        facilities.set(locationLabel, {
+          locationLabel,
+          totalDetections: 0,
+          confidenceTotal: 0,
+          classificationCounts: new Map()
+        });
+      }
+
+      const facility = facilities.get(locationLabel);
+      const classification = record.classification || "unclassified";
+      facility.totalDetections++;
+      facility.confidenceTotal += Number(record.confidence) || 0;
+      facility.classificationCounts.set(
+        classification,
+        (facility.classificationCounts.get(classification) || 0) + 1
+      );
+    });
+
+    return [...facilities.values()].map(facility => {
+      const [dominantCategory, dominantCount] = [...facility.classificationCounts.entries()]
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0];
+      return {
+        locationLabel: facility.locationLabel,
+        totalDetections: facility.totalDetections,
+        anomalousCount: facility.totalDetections - dominantCount,
+        averageConfidence: facility.confidenceTotal / facility.totalDetections,
+        dominantCategory
+      };
+    });
+  }
+
+  sortFacilityRankings(sortKey) {
+    if (this.facilityRankingSortKey === sortKey) {
+      this.facilityRankingSortDirection = this.facilityRankingSortDirection === "desc" ? "asc" : "desc";
+    } else {
+      this.facilityRankingSortKey = sortKey;
+      this.facilityRankingSortDirection = sortKey === "locationLabel" || sortKey === "dominantCategory" ? "asc" : "desc";
+    }
+    this.renderFacilityRankings();
+  }
+
+  renderFacilityRankings() {
+    const tbody = document.getElementById("facility-rankings-body");
+    if (!tbody) return;
+
+    const direction = this.facilityRankingSortDirection === "asc" ? 1 : -1;
+    const rows = this.aggregateFacilityRankings(window.NexusApp.records).sort((a, b) => {
+      const first = a[this.facilityRankingSortKey];
+      const second = b[this.facilityRankingSortKey];
+      if (typeof first === "string") return direction * first.localeCompare(second);
+      return direction * (first - second) || a.locationLabel.localeCompare(b.locationLabel);
+    });
+
+    document.getElementById("facility-rankings-count").textContent = `${rows.length} ${rows.length === 1 ? "facility" : "facilities"}`;
+    document.querySelectorAll(".facility-ranking-table th[data-sort-key]").forEach(header => {
+      const selected = header.dataset.sortKey === this.facilityRankingSortKey;
+      header.setAttribute("aria-sort", selected ? (direction === 1 ? "ascending" : "descending") : "none");
+      const indicator = header.querySelector("span");
+      if (indicator) indicator.textContent = selected ? (direction === 1 ? "ASC" : "DESC") : "";
+    });
+
+    tbody.replaceChildren();
+    if (!rows.length) {
+      const row = document.createElement("tr");
+      const cell = document.createElement("td");
+      cell.colSpan = 5;
+      cell.className = "facility-rankings-empty";
+      cell.textContent = "No facility records are available.";
+      row.appendChild(cell);
+      tbody.appendChild(row);
+      return;
+    }
+
+    rows.forEach(facility => {
+      const row = document.createElement("tr");
+      const values = [
+        facility.locationLabel,
+        facility.totalDetections,
+        facility.anomalousCount,
+        `${Math.round(facility.averageConfidence * 100)}%`,
+        facility.dominantCategory.replaceAll("_", " ")
+      ];
+      values.forEach((value, index) => {
+        const cell = document.createElement("td");
+        cell.textContent = value;
+        if (index === 2 && facility.anomalousCount > 0) cell.className = "ranking-anomaly-count";
+        row.appendChild(cell);
+      });
+      tbody.appendChild(row);
+    });
+  }
+
+  async renderReviewQueue() {
+    const list = document.getElementById("review-queue-list");
+    if (!list) return;
+
+    const renderToken = ++this.reviewQueueRenderToken;
+    const records = await window.NexusApp.getReviewQueueRecords();
+    if (renderToken !== this.reviewQueueRenderToken || this.activeView !== "review") return;
+
+    document.getElementById("review-queue-count").textContent = `${records.length} ${records.length === 1 ? "record" : "records"}`;
+    list.replaceChildren();
+
+    if (!records.length) {
+      const emptyState = document.createElement("div");
+      emptyState.className = "review-queue-empty";
+      emptyState.textContent = "No records currently meet the review criteria.";
+      list.appendChild(emptyState);
+      return;
+    }
+
+    records.forEach(record => list.appendChild(this.createReviewQueueCard(record)));
+  }
+
+  createReviewQueueCard(record) {
+    const card = document.createElement("article");
+    card.className = "facility-card review-record-card";
+
+    const top = document.createElement("div");
+    top.className = "facility-card-top";
+    const name = document.createElement("span");
+    name.className = "facility-name";
+    name.textContent = record.locationLabel;
+    const badge = document.createElement("span");
+    badge.className = `classification-badge ${record.classification}`;
+    badge.textContent = record.classification.replaceAll("_", " ");
+    top.append(name, badge);
+    card.appendChild(top);
+
+    const metadata = document.createElement("div");
+    metadata.className = "review-record-meta";
+    const confidence = document.createElement("strong");
+    confidence.textContent = `${Math.round(record.confidence * 100)}% confidence`;
+    const detected = document.createElement("span");
+    detected.textContent = new Date(record.detectedAt).toLocaleString();
+    metadata.append(confidence, detected);
+    card.appendChild(metadata);
+
+    const reasoningBox = document.createElement("div");
+    reasoningBox.className = "reasoning-box review-reasoning-box";
+    const reasoningTitle = document.createElement("div");
+    reasoningTitle.className = "reasoning-title";
+    reasoningTitle.textContent = "Classification reasoning";
+    const reasoningList = document.createElement("ul");
+    reasoningList.className = "reasoning-list";
+    const reasoning = Array.isArray(record.reasoning) && record.reasoning.length
+      ? record.reasoning
+      : ["No classification reasoning is available."];
+    reasoning.forEach(item => {
+      const listItem = document.createElement("li");
+      listItem.textContent = item;
+      reasoningList.appendChild(listItem);
+    });
+    reasoningBox.append(reasoningTitle, reasoningList);
+    card.appendChild(reasoningBox);
+
+    if (record.reviewDecision === "manual_investigation") {
+      const decision = document.createElement("p");
+      decision.className = "review-record-decision";
+      decision.textContent = "Manual investigation requested";
+      card.appendChild(decision);
+    }
+
+    const actions = document.createElement("div");
+    actions.className = "review-record-actions";
+    if (window.NexusApp.role === "analyst") {
+      const confirmButton = document.createElement("button");
+      confirmButton.type = "button";
+      confirmButton.className = "btn-command primary";
+      confirmButton.textContent = `Confirm as ${this.getBestGuessCategory(record).replaceAll("_", " ")}`;
+      confirmButton.addEventListener("click", () => this.confirmReviewRecord(record));
+
+      const manualButton = document.createElement("button");
+      manualButton.type = "button";
+      manualButton.className = "btn-command";
+      manualButton.textContent = record.reviewDecision === "manual_investigation"
+        ? "Manual investigation requested"
+        : "Mark for manual investigation";
+      manualButton.disabled = record.reviewDecision === "manual_investigation";
+      manualButton.addEventListener("click", () => this.markForManualInvestigation(record));
+      actions.append(confirmButton, manualButton);
+    } else {
+      const readOnlyNote = document.createElement("span");
+      readOnlyNote.className = "review-read-only-note";
+      readOnlyNote.textContent = "Review actions are disabled in public view.";
+      actions.appendChild(readOnlyNote);
+    }
+    card.appendChild(actions);
+    return card;
+  }
+
+  getBestGuessCategory(record) {
+    if (record.classification !== "unclassified") return record.classification;
+    const suggestions = {
+      "bare/mining": "mining",
+      cropland: "agri_burn",
+      forest: "wildfire",
+      "built-up": "industrial_fire"
+    };
+    return suggestions[record.landCoverClass] || "industrial_fire";
+  }
+
+  async confirmReviewRecord(record) {
+    if (window.NexusApp.role !== "analyst") return;
+    const classification = this.getBestGuessCategory(record);
+    const reasoning = Array.isArray(record.reasoning) ? [...record.reasoning] : [];
+    reasoning.push(`Reviewer confirmed as ${classification.replaceAll("_", " ")}.`);
+    await window.NexusApp.updateRecord(record.id, {
+      classification,
+      confidence: 0.95,
+      reasoning,
+      status: "reviewed",
+      reviewDecision: "confirmed"
+    });
+    this.showToast(`Confirmed ${record.locationLabel} as ${classification.replaceAll("_", " ")}.`);
+  }
+
+  async markForManualInvestigation(record) {
+    if (window.NexusApp.role !== "analyst" || record.reviewDecision === "manual_investigation") return;
+    const reasoning = Array.isArray(record.reasoning) ? [...record.reasoning] : [];
+    reasoning.push("Manual investigation requested from Review Queue.");
+    await window.NexusApp.updateRecord(record.id, {
+      status: "pending",
+      reasoning,
+      reviewDecision: "manual_investigation"
+    });
+    this.showToast(`Marked ${record.locationLabel} for manual investigation.`);
   }
 
   // 4. Render live classification distribution donut chart
@@ -444,6 +774,124 @@ class UIEngine {
     ctx.stroke();
   }
 
+  openFacilityTrend(selectedRecord) {
+    if (!selectedRecord) return;
+
+    const radiusMeters = 1000;
+    const genericLabels = new Set(["", "unnamed facility", "unknown facility", "manual hotspot"]);
+    const selectedLabel = selectedRecord.locationLabel.trim().toLowerCase();
+    const toRadians = degrees => degrees * Math.PI / 180;
+    const records = window.NexusApp.records.filter(record => {
+      if (!genericLabels.has(selectedLabel) && record.locationLabel.trim().toLowerCase() === selectedLabel) return true;
+      const latitudeDelta = toRadians(record.latitude - selectedRecord.latitude);
+      const longitudeDelta = toRadians(record.longitude - selectedRecord.longitude);
+      const latitude1 = toRadians(selectedRecord.latitude);
+      const latitude2 = toRadians(record.latitude);
+      const haversine = Math.sin(latitudeDelta / 2) ** 2 +
+        Math.cos(latitude1) * Math.cos(latitude2) * Math.sin(longitudeDelta / 2) ** 2;
+      return 6371000 * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine)) <= radiusMeters;
+    }).sort((a, b) => new Date(a.detectedAt) - new Date(b.detectedAt));
+
+    if (!records.length) return;
+
+    const classCounts = new Map();
+    records.forEach(record => {
+      classCounts.set(record.classification, (classCounts.get(record.classification) || 0) + 1);
+    });
+    const dominantClass = [...classCounts.entries()].sort((a, b) => b[1] - a[1])[0][0];
+    const firstDay = Date.parse(`${records[0].detectedAt.slice(0, 10)}T00:00:00Z`);
+    const lastRecord = records[records.length - 1];
+    const lastDay = Date.parse(`${lastRecord.detectedAt.slice(0, 10)}T00:00:00Z`);
+    const daySpan = Math.max(1, Math.round((lastDay - firstDay) / 86400000) + 1);
+    const dominantPercent = Math.round((classCounts.get(dominantClass) / records.length) * 100);
+
+    document.getElementById("facility-trend-name").textContent = selectedRecord.locationLabel;
+    document.getElementById("facility-trend-summary").textContent =
+      `${records.length} detections over ${daySpan} days, ${dominantPercent}% classified as ${dominantClass.replaceAll("_", " ")}.`;
+    document.getElementById("modal-facility-trend").classList.add("active");
+
+    this.renderFacilityTrendChart("chart-facility-frp", records, "frp", dominantClass, "#00c2c7", " MW");
+    this.renderFacilityTrendChart("chart-facility-recurrence", records, "recurrenceCount", dominantClass, "#f2a93c", "");
+  }
+
+  renderFacilityTrendChart(canvasId, records, metric, dominantClass, lineColor, unit) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+
+    const context = canvas.getContext("2d");
+    const width = canvas.clientWidth || 420;
+    const height = canvas.clientHeight || 220;
+    const pixelRatio = window.devicePixelRatio || 1;
+    canvas.width = width * pixelRatio;
+    canvas.height = height * pixelRatio;
+    context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+    context.clearRect(0, 0, width, height);
+
+    const plot = { left: 42, right: width - 12, top: 12, bottom: height - 34 };
+    const values = records.map(record => Number(record[metric]) || 0);
+    const maximum = Math.max(...values, 1);
+    const timestampStart = new Date(records[0].detectedAt).getTime();
+    const timestampEnd = new Date(records[records.length - 1].detectedAt).getTime();
+    const timestampSpan = timestampEnd - timestampStart;
+    const points = records.map((record, index) => {
+      const timestamp = new Date(record.detectedAt).getTime();
+      const timePosition = timestampSpan ? (timestamp - timestampStart) / timestampSpan : index / Math.max(records.length - 1, 1);
+      return {
+        x: plot.left + timePosition * (plot.right - plot.left),
+        y: plot.bottom - (values[index] / maximum) * (plot.bottom - plot.top),
+        anomaly: record.classification !== dominantClass
+      };
+    });
+
+    context.font = "10px monospace";
+    context.textAlign = "right";
+    context.textBaseline = "middle";
+    for (let tick = 0; tick <= 3; tick++) {
+      const ratio = tick / 3;
+      const y = plot.bottom - ratio * (plot.bottom - plot.top);
+      const value = (maximum * ratio).toFixed(metric === "frp" ? 1 : 0);
+      context.strokeStyle = "rgba(255, 255, 255, 0.11)";
+      context.beginPath();
+      context.moveTo(plot.left, y);
+      context.lineTo(plot.right, y);
+      context.stroke();
+      context.fillStyle = "#8da1a7";
+      context.fillText(`${value}${unit}`, plot.left - 7, y);
+    }
+
+    context.beginPath();
+    points.forEach((point, index) => {
+      if (index === 0) context.moveTo(point.x, point.y);
+      else context.lineTo(point.x, point.y);
+    });
+    context.strokeStyle = lineColor;
+    context.lineWidth = 2;
+    context.stroke();
+
+    points.forEach(point => {
+      context.beginPath();
+      context.arc(point.x, point.y, point.anomaly ? 5 : 3, 0, Math.PI * 2);
+      context.fillStyle = point.anomaly ? "#ff5d73" : lineColor;
+      context.fill();
+      if (point.anomaly) {
+        context.strokeStyle = "#fff";
+        context.lineWidth = 1.5;
+        context.stroke();
+      }
+    });
+
+    const labelIndexes = [...new Set([0, Math.floor((records.length - 1) / 2), records.length - 1])];
+    context.font = "9px monospace";
+    context.textAlign = "center";
+    context.textBaseline = "top";
+    context.fillStyle = "#8da1a7";
+    labelIndexes.forEach(index => {
+      const date = new Date(records[index].detectedAt);
+      const label = `${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(date.getUTCDate()).padStart(2, "0")}`;
+      context.fillText(label, points[index].x, plot.bottom + 9);
+    });
+  }
+
   // 6. Render Table Rows in Bottom Drawer (with Full CRUD Actions)
   renderTable(records) {
     const tbody = document.getElementById("telemetry-table-body");
@@ -535,13 +983,17 @@ class UIEngine {
   renderIncidentPanel(record) {
     const panel = document.getElementById("incident-panel");
     if (!panel) return;
+    const mapViewport = document.getElementById("map-viewport");
 
     if (!record) {
       panel.classList.remove("open");
+      mapViewport.classList.remove("incident-open");
       return;
     }
 
     panel.classList.add("open");
+    mapViewport.classList.add("incident-open");
+    mapViewport.style.setProperty("--active-incident-panel-width", `${panel.getBoundingClientRect().width}px`);
 
     const canEdit = window.NexusApp.role === "analyst";
     ["btn-trigger-edit", "btn-trigger-override", "btn-trigger-delete"].forEach(id => {
@@ -633,6 +1085,52 @@ class UIEngine {
         }
       };
     }
+  }
+
+  bindIncidentPanelResize() {
+    const panel = document.getElementById("incident-panel");
+    const mapViewport = document.getElementById("map-viewport");
+    const handle = document.getElementById("incident-panel-resize");
+    if (!panel || !mapViewport || !handle) return;
+
+    const getBounds = () => {
+      const minimum = 320;
+      const maximum = Math.max(minimum, Math.min(760, mapViewport.clientWidth - 280));
+      return { minimum, maximum };
+    };
+    const setWidth = width => {
+      const { minimum, maximum } = getBounds();
+      const nextWidth = Math.round(Math.max(minimum, Math.min(maximum, width)));
+      panel.style.width = `${nextWidth}px`;
+      mapViewport.style.setProperty("--active-incident-panel-width", `${nextWidth}px`);
+      handle.setAttribute("aria-valuenow", String(nextWidth));
+    };
+
+    handle.addEventListener("pointerdown", event => {
+      if (window.matchMedia("(max-width: 720px)").matches) return;
+      event.preventDefault();
+      const startX = event.clientX;
+      const startWidth = panel.getBoundingClientRect().width;
+      const onPointerMove = moveEvent => setWidth(startWidth + startX - moveEvent.clientX);
+      const stopResizing = () => {
+        window.removeEventListener("pointermove", onPointerMove);
+        window.removeEventListener("pointerup", stopResizing);
+        window.removeEventListener("pointercancel", stopResizing);
+      };
+      window.addEventListener("pointermove", onPointerMove);
+      window.addEventListener("pointerup", stopResizing);
+      window.addEventListener("pointercancel", stopResizing);
+    });
+
+    handle.addEventListener("keydown", event => {
+      if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+      event.preventDefault();
+      const { minimum, maximum } = getBounds();
+      const currentWidth = panel.getBoundingClientRect().width;
+      if (event.key === "Home") setWidth(minimum);
+      else if (event.key === "End") setWidth(maximum);
+      else setWidth(currentWidth + (event.key === "ArrowLeft" ? 24 : -24));
+    });
   }
 
   // 8. Manual Hotspot Ingestion Modal (Create - Journey A)

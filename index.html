@@ -19,6 +19,20 @@
 </head>
 <body>
   <div id="app-container">
+    <aside class="demo-alert-banner" id="demo-alert-banner" role="status" aria-live="polite" aria-atomic="true" aria-hidden="true">
+      <span class="demo-alert-icon" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.3 3.9 2.2 18a2 2 0 0 0 1.7 3h16.2a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>
+      </span>
+      <div class="demo-alert-copy">
+        <span class="demo-alert-label">DEMO ALERT | SMS/Email dispatch simulated</span>
+        <strong id="demo-alert-facility"></strong>
+        <span id="demo-alert-details"></span>
+      </div>
+      <button type="button" class="demo-alert-close" id="demo-alert-dismiss" aria-label="Dismiss demo alert" title="Dismiss">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 6-12 12"></path><path d="m6 6 12 12"></path></svg>
+      </button>
+    </aside>
+
     <!-- ====================================================================
          TOP COMMAND HEADER
          ==================================================================== -->
@@ -69,6 +83,10 @@
             <option value="public">Public / Read-Only</option>
           </select>
         </label>
+        <button type="button" class="btn-command dashboard-sidebar-toggle" id="btn-toggle-dashboard-sidebar" aria-label="Toggle telemetry dashboard" aria-expanded="false" title="Toggle telemetry dashboard">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M3 9h18M9 21V9"></path></svg>
+          Telemetry
+        </button>
         <button class="btn-command primary" id="btn-add-hotspot">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
           Ingest Hotspot
@@ -76,6 +94,10 @@
         <button class="btn-command" id="btn-export-data">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
           Export JSON
+        </button>
+        <button class="btn-command" id="btn-open-facility-rankings" title="Facility Rankings" aria-label="Open Facility Rankings">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"></path><path d="m19 9-5 5-4-4-5 5"></path></svg>
+          Facility Rankings
         </button>
         <button class="btn-command" id="btn-open-settings" title="System Settings & Storage Management">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
@@ -147,6 +169,14 @@
                 <span class="kpi-subtext">multi-modal</span>
               </div>
             </div>
+
+            <button type="button" class="kpi-card alert-review review-queue-kpi" id="kpi-review-queue" aria-label="Open review queue">
+              <span class="kpi-label">Records Needing Review</span>
+              <div class="kpi-value-row">
+                <span class="kpi-value" id="kpi-review-count">0</span>
+                <span class="kpi-subtext">open queue</span>
+              </div>
+            </button>
           </div>
         </div>
 
@@ -218,13 +248,63 @@
         </div>
       </aside>
 
+      <section class="review-queue-view" id="review-queue-view" aria-labelledby="review-queue-title">
+        <header class="review-queue-header">
+          <div>
+            <p class="review-queue-eyebrow">Classification oversight</p>
+            <h1 id="review-queue-title">Review Queue</h1>
+            <p>Low-confidence and unclassified records, ordered from lowest confidence.</p>
+          </div>
+          <button type="button" class="btn-command" id="btn-return-to-map">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"></path><path d="M9 12h12"></path><path d="M3 4v16"></path></svg>
+            Back to Map
+          </button>
+        </header>
+        <div class="review-queue-status">
+          <span id="review-queue-count">0 records</span>
+          <span>Confidence ascending</span>
+        </div>
+        <div class="review-queue-list" id="review-queue-list" aria-live="polite"></div>
+      </section>
+
+      <section class="facility-rankings-view" id="facility-rankings-view" aria-labelledby="facility-rankings-title">
+        <header class="review-queue-header">
+          <div>
+            <p class="review-queue-eyebrow">Facility behavior baseline</p>
+            <h1 id="facility-rankings-title">Facility Rankings</h1>
+            <p>Facilities ranked by detections that differ from their most common classification.</p>
+          </div>
+          <button type="button" class="btn-command" id="btn-rankings-back-to-map">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"></path><path d="M9 12h12"></path><path d="M3 4v16"></path></svg>
+            Back to Map
+          </button>
+        </header>
+        <div class="review-queue-status">
+          <span id="facility-rankings-count">0 facilities</span>
+          <span>Default sort: anomalous detections, highest first</span>
+        </div>
+        <div class="facility-ranking-table-wrap">
+          <table class="facility-ranking-table">
+            <thead>
+              <tr>
+                <th scope="col" data-sort-key="locationLabel" aria-sort="none"><button type="button" data-ranking-sort="locationLabel">Facility <span></span></button></th>
+                <th scope="col" data-sort-key="totalDetections" aria-sort="none"><button type="button" data-ranking-sort="totalDetections">Total detections <span></span></button></th>
+                <th scope="col" data-sort-key="anomalousCount" aria-sort="descending"><button type="button" data-ranking-sort="anomalousCount">Anomalous detections <span>DESC</span></button></th>
+                <th scope="col" data-sort-key="averageConfidence" aria-sort="none"><button type="button" data-ranking-sort="averageConfidence">Average confidence <span></span></button></th>
+                <th scope="col" data-sort-key="dominantCategory" aria-sort="none"><button type="button" data-ranking-sort="dominantCategory">Baseline classification <span></span></button></th>
+              </tr>
+            </thead>
+            <tbody id="facility-rankings-body"></tbody>
+          </table>
+        </div>
+      </section>
+
       <!-- CENTER GIS MAP VIEWPORT (Reads live from IndexedDB) -->
       <main class="map-viewport" id="map-viewport">
         <!-- Floating Region Switcher Bar -->
         <div class="map-floating-bar">
           <span style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-right: 4px;">Region Focus:</span>
-          <button class="region-btn active" data-region="jamnagar">Jamnagar Refinery Belt</button>
-          <button class="region-btn" data-region="jharia">Jharia Coalfield</button>
+          <button class="region-btn active" data-region="jharia">Jharia Coalfield</button>
           <button class="region-btn" data-region="all">All India Overview</button>
         </div>
 
@@ -235,7 +315,7 @@
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg>
               Satellite Imagery
             </button>
-            <button class="toggle-chip active" id="btn-toggle-buffers">
+            <button class="toggle-chip active" id="btn-toggle-buffers" aria-pressed="true">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"></circle><line x1="12" y1="2" x2="12" y2="4"></line><line x1="12" y1="20" x2="12" y2="22"></line><line x1="20" y1="12" x2="22" y2="12"></line><line x1="2" y1="12" x2="4" y2="12"></line></svg>
               OSM Geofence Buffers
             </button>
@@ -285,6 +365,7 @@
 
         <!-- RIGHT INCIDENT DETAIL & HAZMAT ACTION CARD PANEL -->
         <div class="incident-panel" id="incident-panel">
+          <div class="panel-resize-handle" id="incident-panel-resize" role="separator" aria-label="Resize incident panel" aria-orientation="vertical" aria-valuemin="320" aria-valuemax="720" aria-valuenow="440" tabindex="0" title="Drag or use arrow keys to resize"></div>
           <div class="panel-header">
             <div class="panel-header-title">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
@@ -322,6 +403,11 @@
                 </div>
               </div>
             </div>
+
+            <button class="btn-command facility-trend-trigger" id="btn-open-facility-trend">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"></path><path d="m19 9-5 5-4-4-5 5"></path></svg>
+              Facility Trend
+            </button>
 
             <!-- Telemetry Attribute Matrix -->
             <div class="telemetry-grid">
@@ -411,6 +497,37 @@
           </div>
         </div>
       </main>
+    </div>
+
+    <div class="modal-overlay" id="modal-facility-trend" role="dialog" aria-modal="true" aria-labelledby="facility-trend-title">
+      <div class="modal-container facility-trend-modal">
+        <div class="modal-header">
+          <div>
+            <div class="modal-title" id="facility-trend-title">Facility Trend</div>
+            <div class="facility-trend-name" id="facility-trend-name"></div>
+          </div>
+          <button class="close-panel-btn close-modal-trigger" title="Close Facility Trend" aria-label="Close Facility Trend">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+        <div class="modal-body facility-trend-body">
+          <p class="facility-trend-summary" id="facility-trend-summary"></p>
+          <div class="facility-trend-legend" aria-label="Chart legend">
+            <span><i class="trend-legend-dot baseline"></i>Baseline classification</span>
+            <span><i class="trend-legend-dot anomaly"></i>Classification differs from baseline</span>
+          </div>
+          <div class="facility-trend-charts">
+            <section class="facility-trend-chart">
+              <h3>Fire Radiative Power <span>(MW)</span></h3>
+              <canvas id="chart-facility-frp" aria-label="Facility fire radiative power over time"></canvas>
+            </section>
+            <section class="facility-trend-chart">
+              <h3>Recurrence Count <span>(events)</span></h3>
+              <canvas id="chart-facility-recurrence" aria-label="Facility recurrence count over time"></canvas>
+            </section>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ====================================================================
@@ -914,7 +1031,7 @@
 
         // 4. Initial map fit to Jamnagar / All data
         setTimeout(() => {
-          window.NexusGIS.flyToRegion("jamnagar");
+          window.NexusGIS.flyToRegion("jharia");
         }, 300);
 
         console.log("[NEXUS CORE] System fully operational with Full CRUD.");
